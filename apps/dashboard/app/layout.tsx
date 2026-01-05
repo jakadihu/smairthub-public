@@ -7,15 +7,24 @@ import { Menu } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { DialogTitle } from "@/components/ui/dialog";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { NextIntlClientProvider } from "next-intl"
+import { getMessages } from "next-intl/server"
+import { cookies } from "next/headers"
+import { defaultLocale } from "@/i18n"
 
 export const metadata = {
   title: "SmairtHub Dashboard",
   description: "Excel AI és adatkezelő platform",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+
+  const cookieStore = await cookies() // ← NEXT.JS 15: kötelező az await 
+  const locale = cookieStore.get("locale")?.value || defaultLocale
+  const messages = await getMessages({ locale })
+
   return (
-    <html lang="hu">
+    <html lang="{locale}">
       <body className="h-screen flex">
         {/* Desktop sidebar */}
         <aside className="hidden md:flex w-64 flex-col border-r bg-white">

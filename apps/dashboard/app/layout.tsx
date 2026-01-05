@@ -1,16 +1,17 @@
-import "./globals.css"
-import { ReactNode } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu } from "lucide-react"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
-import { DialogTitle } from "@/components/ui/dialog"
+import "./globals.css";
+import { ReactNode } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { DialogTitle } from "@/components/ui/dialog";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export const metadata = {
   title: "SmairtHub Dashboard",
-  description: "Excel AI és adatkezelő platform"
-}
+  description: "Excel AI és adatkezelő platform",
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -27,7 +28,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Link href="/excel" className="block p-2 rounded hover:bg-gray-100">
               Excel AI modul
             </Link>
-            <Link href="/settings" className="block p-2 rounded hover:bg-gray-100">
+            <Link
+              href="/settings"
+              className="block p-2 rounded hover:bg-gray-100"
+            >
               Beállítások
             </Link>
           </nav>
@@ -42,11 +46,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </SheetTrigger>
 
           <SheetContent side="left" className="w-64 p-0">
-
             <VisuallyHidden>
               <DialogTitle>Mobil menü</DialogTitle>
             </VisuallyHidden>
-
 
             <div className="p-6 text-2xl font-bold">SmairtHub</div>
 
@@ -54,10 +56,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/" className="block p-2 rounded hover:bg-gray-100">
                 Dashboard
               </Link>
-              <Link href="/excel" className="block p-2 rounded hover:bg-gray-100">
+              <Link
+                href="/excel"
+                className="block p-2 rounded hover:bg-gray-100"
+              >
                 Excel AI modul
               </Link>
-              <Link href="/settings" className="block p-2 rounded hover:bg-gray-100">
+              <Link
+                href="/settings"
+                className="block p-2 rounded hover:bg-gray-100"
+              >
                 Beállítások
               </Link>
             </nav>
@@ -71,8 +79,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <h1 className="text-xl font-semibold">Dashboard</h1>
 
             <div className="flex items-center gap-4">
-              <Button variant="outline">HU</Button>
-              <Button variant="outline">EN</Button>
+              <LanguageSwitcher />
             </div>
           </header>
 
@@ -83,5 +90,5 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </div>
       </body>
     </html>
-  )
+  );
 }

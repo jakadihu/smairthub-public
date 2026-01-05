@@ -1,48 +1,84 @@
 import "./globals.css"
 import { ReactNode } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Menu } from "lucide-react"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { DialogTitle } from "@/components/ui/dialog"
 
 export const metadata = {
   title: "SmairtHub Dashboard",
-  description: "Excel AI modul és admin felület"
+  description: "Excel AI és adatkezelő platform"
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="hu">
-      <body className="bg-gray-100 text-gray-900">
-        <div className="flex h-screen">
-          {/* Sidebar */}
-          <aside className="w-64 bg-white border-r p-6 hidden md:block">
-            <h1 className="text-2xl font-bold mb-8">SmairtHub</h1>
+      <body className="h-screen flex">
+        {/* Desktop sidebar */}
+        <aside className="hidden md:flex w-64 flex-col border-r bg-white">
+          <div className="p-6 text-2xl font-bold">SmairtHub</div>
 
-            <nav className="space-y-4">
-              <a href="/" className="block text-gray-700 hover:text-black">
+          <nav className="flex-1 px-4 space-y-2">
+            <Link href="/" className="block p-2 rounded hover:bg-gray-100">
+              Dashboard
+            </Link>
+            <Link href="/excel" className="block p-2 rounded hover:bg-gray-100">
+              Excel AI modul
+            </Link>
+            <Link href="/settings" className="block p-2 rounded hover:bg-gray-100">
+              Beállítások
+            </Link>
+          </nav>
+        </aside>
+
+        {/* Mobile sidebar */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" className="md:hidden absolute top-4 left-4">
+              <Menu className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+
+          <SheetContent side="left" className="w-64 p-0">
+
+            <VisuallyHidden>
+              <DialogTitle>Mobil menü</DialogTitle>
+            </VisuallyHidden>
+
+
+            <div className="p-6 text-2xl font-bold">SmairtHub</div>
+
+            <nav className="px-4 space-y-2">
+              <Link href="/" className="block p-2 rounded hover:bg-gray-100">
                 Dashboard
-              </a>
-              <a href="/excel" className="block text-gray-700 hover:text-black">
+              </Link>
+              <Link href="/excel" className="block p-2 rounded hover:bg-gray-100">
                 Excel AI modul
-              </a>
-              <a href="/settings" className="block text-gray-700 hover:text-black">
+              </Link>
+              <Link href="/settings" className="block p-2 rounded hover:bg-gray-100">
                 Beállítások
-              </a>
+              </Link>
             </nav>
-          </aside>
+          </SheetContent>
+        </Sheet>
 
-          {/* Main content */}
-          <main className="flex-1 overflow-y-auto">
-            {/* Topbar */}
-            <header className="bg-white border-b p-4 flex justify-between items-center">
-              <h2 className="text-xl font-semibold">SmairtHub Dashboard</h2>
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col">
+          {/* Topbar */}
+          <header className="h-16 border-b bg-white flex items-center justify-between px-6">
+            <h1 className="text-xl font-semibold">Dashboard</h1>
 
-              {/* Language switch placeholder */}
-              <div className="flex items-center gap-4 text-gray-600">
-                <button className="hover:text-black">HU</button>
-                <button className="hover:text-black">EN</button>
-              </div>
-            </header>
+            <div className="flex items-center gap-4">
+              <Button variant="outline">HU</Button>
+              <Button variant="outline">EN</Button>
+            </div>
+          </header>
 
-            {/* Page content */}
-            <div className="p-6">{children}</div>
+          {/* Page content */}
+          <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+            {children}
           </main>
         </div>
       </body>

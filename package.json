@@ -4,5 +4,9 @@
   "version": "1.0.0",
   "dependencies": {
     "geist": "^1.5.1"
-  }
+  },
+  "workspaces": [ 
+    "apps/*",
+    "packages/*" 
+  ]
 }

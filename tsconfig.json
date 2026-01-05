@@ -1,9 +1,15 @@
 {
+  "files": [],
+  "references": [
+    { "path": "./packages/ui" }
+  ],
   "compilerOptions": {
-    "baseUrl": ".",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2017",
+    "baseUrl": ".",    
     "paths": {
-      "@smairthub/ui": ["packages/ui/src"],
-      "@smairthub/utils": ["packages/utils/src"]
+      "@smairthub/ui": ["packages/ui/src"]
     }
   }
 }

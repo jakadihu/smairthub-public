@@ -3,7 +3,7 @@
     "baseUrl": ".",
     "paths": {
       "@smairthub/ui": ["packages/ui/src"],
-      "@/*": ["apps/dashboard/*"]
+      "@smairthub/utils": ["packages/utils/src"]
     }
   }
 }

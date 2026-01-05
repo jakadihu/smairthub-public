@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@smairthub/ui": ["packages/ui/src"],
+      "@/*": ["apps/dashboard/*"]
+    }
+  }
+}

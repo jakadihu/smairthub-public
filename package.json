@@ -1,5 +1,8 @@
 {
   "name": "smairthub",
   "private": true,
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "dependencies": {
+    "geist": "^1.5.1"
+  }
 }

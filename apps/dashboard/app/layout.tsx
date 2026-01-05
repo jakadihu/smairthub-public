@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ReactNode } from "react";
 import Link from "next/link";
+import { fontSans } from "@smairthub/ui";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
@@ -24,7 +25,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const messages = await getMessages({ locale })
 
   return (
-    <html lang="{locale}">
+    <html lang="{locale}" className={fontSans.className}>
       <body className="h-screen flex">
         {/* Desktop sidebar */}
         <aside className="hidden md:flex w-64 flex-col border-r bg-white">

@@ -1,11 +1,13 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "dist",
-    "moduleResolution": "bundler"
+  "name": "@smairthub/ui",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
   },
-  "include": ["src"]
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }

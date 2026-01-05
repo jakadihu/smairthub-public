@@ -1,12 +1,12 @@
 {
   "name": "smairthub",
-  "private": true,
   "version": "1.0.0",
-  "dependencies": {
-    "geist": "^1.5.1"
-  },
-  "workspaces": [ 
+  "private": true,
+  "workspaces": [
     "apps/*",
-    "packages/*" 
-  ]
+    "packages/*"
+  ],
+  "dependencies": {
+    "geist": "1.5.1"
+  }
 }

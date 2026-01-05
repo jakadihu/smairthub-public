@@ -1,4 +1,10 @@
 packages:
-  - "apps/*"
-  - "modules/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'modules/*'
+  - 'packages/*'
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@swc/core'
+  - sharp
+  - unrs-resolver

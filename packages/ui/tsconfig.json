@@ -4,7 +4,9 @@
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "moduleResolution": "bundler",
+    "emitDeclarationOnly": false
   },
   "include": ["src"]
 }

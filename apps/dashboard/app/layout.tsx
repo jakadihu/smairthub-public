@@ -8,6 +8,7 @@ import { Menu } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { DialogTitle } from "@/components/ui/dialog";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeSwitcher } from "@/components/darkmode-switcher"; 
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
@@ -29,8 +30,10 @@ export default async function RootLayout({
   const messages = await getMessages({ locale });
   const t = await getTranslations({ locale, namespace: "common" });
 
+  const theme = cookieStore.get("theme")?.value || "light";
+
   return (
-    <html lang={locale}>
+    <html lang={locale} className={theme === "dark" ? "dark" : ""}>
       <body className="h-screen flex">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {/* Desktop sidebar */}
@@ -101,7 +104,8 @@ export default async function RootLayout({
               <h1 className="text-xl font-semibold">Dashboard</h1>
 
               <div className="flex items-center gap-4">
-                <LanguageSwitcher locale={locale} />
+                <LanguageSwitcher />
+                <ThemeSwitcher theme={theme} />
               </div>
             </header>
 

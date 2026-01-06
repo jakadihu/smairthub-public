@@ -1,0 +1,9 @@
+{
+  "name": "@smairthub/config",
+  "version": "1.0.0",
+  "main": "index.js",
+  "files": [
+    "global-font.css",
+    "index.js"
+  ]
+}

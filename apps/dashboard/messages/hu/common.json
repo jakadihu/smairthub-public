@@ -1,0 +1,12 @@
+{
+  "nav": {
+    "dashboard": "Vezérlőpult",
+    "excel": "Excel AI modul",
+    "settings": "Beállítások"
+  },
+  "header": {
+    "dashboard": "Dashboard"
+  },
+  "mobileMenu": "Mobil menü",
+  "brand": "SmairtHub"
+}

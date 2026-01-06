@@ -1,11 +1,12 @@
-import {getRequestConfig} from 'next-intl/server';
-import {defaultLocale} from '../i18n'; // vagy ahol nálad van
+import { getRequestConfig } from "next-intl/server";
 
-export default getRequestConfig(async ({locale}) => {
-  const resolvedLocale = locale ?? defaultLocale;
+export default getRequestConfig(async ({ locale }) => {
+  const safeLocale = locale || "hu";
 
   return {
-    locale: resolvedLocale,
-    messages: (await import(`../messages/${resolvedLocale}.json`)).default
+    locale: safeLocale,
+    messages: {
+      common: (await import(`../messages/${safeLocale}/common.json`)).default      
+    }
   };
 });

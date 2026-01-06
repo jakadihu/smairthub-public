@@ -1,7 +1,8 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/ui" }
+    { "path": "./packages/ui" },
+    { "path": "./packages/config" }
   ],
   "compilerOptions": {
     "module": "esnext",
@@ -10,8 +11,7 @@
     "baseUrl": ".",    
     "paths": {
       "@smairthub/ui": ["packages/ui/src"],
-      "@smairthub/config": ["packages/config"],
-      "@smairthub/config/*": ["packages/config/*"]
+      "@smairthub/config": ["packages/config"],      
     }
   }
 }

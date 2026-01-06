@@ -1,27 +1,23 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 
 type Props = {
-  locale?: string; // legyen optional
+  locale?: string;
 };
 
 export function LanguageSwitcher({ locale }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
 
-  // Biztonságos inicializálás
-  const initial = (locale ?? "hu").toUpperCase();
-
-  const [lang, setLang] = useState(initial);
+  const lang = (locale ?? "hu").toUpperCase();
 
   const changeLang = (newLocale: string) => {
     document.cookie = `locale=${newLocale}; path=/; max-age=31536000`;
-    setLang(newLocale.toUpperCase());
-    router.refresh();
+    router.replace(pathname);    
   };
 
   return (

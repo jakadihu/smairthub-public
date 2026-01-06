@@ -24,7 +24,7 @@ export default async function RootLayout({
   children: ReactNode;
 }) {
   const cookieStore = await cookies(); // ← NEXT.JS 15: kötelező az await
-  const locale = cookieStore.get("locale")?.value || defaultLocale;
+  const locale = cookieStore.get("locale")?.value || defaultLocale;  
 
   const messages = await getMessages({ locale });
   const t = await getTranslations({ locale, namespace: "common" });
@@ -101,7 +101,7 @@ export default async function RootLayout({
               <h1 className="text-xl font-semibold">Dashboard</h1>
 
               <div className="flex items-center gap-4">
-                <LanguageSwitcher />
+                <LanguageSwitcher locale={locale} />
               </div>
             </header>
 

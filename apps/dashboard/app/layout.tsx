@@ -30,14 +30,15 @@ export default async function RootLayout({
   const messages = await getMessages({ locale });
   const t = await getTranslations({ locale, namespace: "common" });
 
-  const theme = cookieStore.get("theme")?.value || "light";
+  const rawTheme = cookieStore.get("theme")?.value;
+  const theme: "light" | "dark" = rawTheme === "dark" || rawTheme === "light" ? rawTheme : "light";
 
   return (
     <html lang={locale} className={theme === "dark" ? "dark" : ""}>
       <body className="h-screen flex">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {/* Desktop sidebar */}
-          <aside className="hidden md:flex w-64 flex-col border-r bg-white">
+          <aside className="hidden md:flex w-64 flex-col border-r">
             <div className="p-6 text-2xl font-bold">{t("brand")}</div>
 
             <nav className="flex-1 px-4 space-y-2">
@@ -100,7 +101,7 @@ export default async function RootLayout({
           {/* Main content area */}
           <div className="flex-1 flex flex-col">
             {/* Topbar */}
-            <header className="h-16 border-b bg-white flex items-center justify-between px-6">
+            <header className="h-16 border-b flex items-center justify-between px-6">
               <h1 className="text-xl font-semibold">Dashboard</h1>
 
               <div className="flex items-center gap-4">

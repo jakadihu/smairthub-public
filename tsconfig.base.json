@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@modules/*": ["modules/*"],
+      "@smairthub/ui": ["packages/ui/src"],
+      "@smairthub/config": ["packages/config"]
+    }
+  }
+}

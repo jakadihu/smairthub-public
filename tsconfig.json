@@ -1,17 +1,12 @@
 {
+  "extends": "./tsconfig.base.json",
   "files": [],
   "references": [
-    { "path": "./packages/ui" },
-    { "path": "./packages/config" }
+    { "path": "./packages/ui" }
   ],
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",
-    "target": "es2017",
-    "baseUrl": ".",    
-    "paths": {
-      "@smairthub/ui": ["packages/ui/src"],
-      "@smairthub/config": ["packages/config"],      
-    }
+    "target": "es2017"
   }
 }

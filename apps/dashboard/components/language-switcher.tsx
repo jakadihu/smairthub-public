@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { useLocale } from "next-intl";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,13 +13,21 @@ import { Globe } from "lucide-react";
 export function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
-  const locale = useLocale(); // ← mindig az aktuális locale a Providerből
 
-  const lang = (locale ?? "hu").toUpperCase();
+  // A locale-t mindig a URL-ből olvassuk ki
+  const currentLocale = pathname.split("/")[1] || "hu";
 
-  const changeLang = (newLocale: string) => {
+  const switchLanguage = (newLocale: string) => {
+    if (newLocale === currentLocale) return;
+
+    const segments = pathname.split("/");
+    segments[1] = newLocale;
+
+    const newPath = segments.join("/");
+
     document.cookie = `locale=${newLocale}; path=/; max-age=31536000`;
-    router.refresh(); // itt már elég a refresh, mert a Provider context frissül
+
+    router.push(newPath);
   };
 
   return (
@@ -28,13 +35,17 @@ export function LanguageSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center gap-2">
           <Globe className="h-4 w-4" />
-          {lang}
+          {currentLocale.toUpperCase()}
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => changeLang("hu")}>🇭🇺 Magyar</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => changeLang("en")}>🇬🇧 English</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => switchLanguage("hu")}>
+          🇭🇺 Magyar
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => switchLanguage("en")}>
+          🇬🇧 English
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

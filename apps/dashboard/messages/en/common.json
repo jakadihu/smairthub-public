@@ -1,12 +1,13 @@
 {
   "nav": {
-    "dashboard": "Vezérlőpult",
+    "dashboard": "Control Panel",
     "excel": "Excel AI modul",
     "settings": "Beállítások"
   },
   "header": {
     "dashboard": "Dashboard"
   },
+  "welcome": "Welcome to the smairt🗃️hub dashboard!",
   "mobileMenu": "Mobil menü",
   "brand": "SmairtHub-E"
 }

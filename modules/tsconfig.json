@@ -1,8 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "types": ["react"],
+    "jsx": "react-jsx",    
     "module": "esnext",
     "moduleResolution": "bundler",
     "composite": true

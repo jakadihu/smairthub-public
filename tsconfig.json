@@ -2,7 +2,8 @@
   "extends": "./tsconfig.base.json",
   "files": [],
   "references": [
-    { "path": "./packages/ui" }
+    { "path": "./packages/ui" },
+    { "path": "./modules" }
   ],
   "compilerOptions": {
     "module": "esnext",

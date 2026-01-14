@@ -6,5 +6,8 @@
     "moduleResolution": "bundler",
     "composite": true
   },
+  "references": [
+    { "path": "../packages/i18n" }
+  ],
   "include": ["./**/*"]
 }

@@ -13,7 +13,7 @@ import { ThemeSwitcher } from "@/components/darkmode-switcher";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
-import { defaultLocale } from "@/i18n";
+import { defaultLocale } from "@smairthub/i18n";
 
 export const metadata = {
   title: "SmairtHub Dashboard",
@@ -30,8 +30,7 @@ export default async function RootLayout({
   const cookieStore = await cookies();
 
   // Locale a URL-ből
-  const locale = params.locale || defaultLocale;  
-  //const locale = cookieStore.get("locale")?.value || defaultLocale;
+  const locale = params.locale || defaultLocale;    
 
   const messages = await getMessages({ locale });
   const t = await getTranslations({ locale, namespace: "common" });

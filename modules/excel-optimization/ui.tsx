@@ -1,3 +1,5 @@
+import type { LocaleCode } from "@smairthub/i18n";
+
 export function ExcelOptimizationModule() {
   return (
     <div>

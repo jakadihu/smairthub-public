@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { locales, defaultLocale, isLocale } from "./i18n";
+import { locales, defaultLocale, isLocale } from "@smairthub/i18n";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

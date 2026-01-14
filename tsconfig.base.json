@@ -4,7 +4,8 @@
     "paths": {
       "@modules/*": ["modules/*"],
       "@smairthub/ui": ["packages/ui/src"],
-      "@smairthub/config": ["packages/config"]
+      "@smairthub/config": ["packages/config"],
+      "@smairthub/i18n": ["packages/i18n"]
     }
   }
 }

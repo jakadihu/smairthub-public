@@ -3,7 +3,8 @@
   "files": [],
   "references": [
     { "path": "./packages/ui" },
-    { "path": "./modules" }
+    { "path": "./modules" },
+    { "path": "./packages/i18n" }
   ],
   "compilerOptions": {
     "module": "esnext",

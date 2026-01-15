@@ -1,7 +1,7 @@
+import type { LucideIcon } from "lucide-react"
+
 export type LocaleCode = "hu" | "en";
-
 export type ModuleId = string;
-
 export type ModuleVisibility = "public" | "private" | "beta";
 
 export interface ModuleMeta {
@@ -14,11 +14,13 @@ export interface ModuleMeta {
   tags: string[];
   category: "excel" | "automation" | "integration" | "other";
 
-  premium: boolean;          // ingyenes vs fizetős
+  premium: boolean;         // ingyenes vs fizetős
   featured: boolean;        // kiemelt modul a listában
 
-  icon: string;             // később: ikon neve / komponens kulcs
+  icon: LucideIcon;             // később: ikon neve / komponens kulcs
   order: number;            // rendezéshez
 
   visibility?: ModuleVisibility; // pl. "beta" modulok elrejtése / jelölése
+
+  component: React.ComponentType
 }

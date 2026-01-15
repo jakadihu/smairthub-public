@@ -27,10 +27,10 @@ export default async function DashboardPage({
             <Link
               key={mod.meta.id}
               href={`/${locale}/${mod.meta.slug}`}
-              className="block p-6 rounded-md border hover:shadow-lg transition bg-white dark:bg-black"
+              className="block p-6 rounded-md border hover:shadow-md transition bg-white dark:bg-black"
             >
               <div className="text-4xl mb-3">
-                {mod.meta.icon === "table" ? "📊" : "📦"}
+                <mod.meta.icon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
               </div>
 
               <h3 className="text-lg font-semibold">{mod.meta.name[locale]}</h3>

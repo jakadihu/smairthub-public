@@ -1,4 +1,6 @@
+import { Sheet } from "lucide-react"
 import type { ModuleMeta } from "@modules/types";
+import { ExcelOptimizationRoot } from "./components/ExcelOptimizationRoot"
 
 export const excelOptimizationModuleMeta: ModuleMeta = {
   id: "excel-optimization",
@@ -20,8 +22,10 @@ export const excelOptimizationModuleMeta: ModuleMeta = {
   premium: false,
   featured: true,
 
-  icon: "table",
+  icon: Sheet,
   order: 10,
 
   visibility: "public",
+
+  component: ExcelOptimizationRoot,
 };

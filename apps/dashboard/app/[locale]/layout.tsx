@@ -28,18 +28,18 @@ export default async function RootLayout({
   params: { locale: string };
 }) {
   const cookieStore = await cookies();
-
-  // Locale a URL-ből
-  const locale = params.locale || defaultLocale;
+  
+  const resolvedParams = await params;
+  const locale = resolvedParams.locale || defaultLocale;    
+  const t = await getTranslations({ locale, namespace: "common" });
 
   const messages = { common: (await import(`../../messages/${locale}/common.json`)).default };
-  const t = await getTranslations({ locale, namespace: "common" });
 
   const rawTheme = cookieStore.get("theme")?.value;
   const theme: "light" | "dark" =
-    rawTheme === "dark" || rawTheme === "light" ? rawTheme : "light";   
-    
-  console.log("LOCALE:", locale);
+    rawTheme === "dark" || rawTheme === "light" ? rawTheme : "light";
+
+    console.log("TYPE:", typeof params); console.log("IS PROMISE:", params instanceof Promise); console.log("REAL VALUE:", await Promise.resolve(params)); console.log("DIRECT ACCESS:", params.locale);
 
   return (
     <html lang={locale} className={theme === "dark" ? "dark" : ""}>

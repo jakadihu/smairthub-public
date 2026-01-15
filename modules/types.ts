@@ -15,10 +15,10 @@ export interface ModuleMeta {
   category: "excel" | "automation" | "integration" | "other";
 
   premium: boolean;          // ingyenes vs fizetős
-  featured?: boolean;        // kiemelt modul a listában
+  featured: boolean;        // kiemelt modul a listában
 
-  icon?: string;             // később: ikon neve / komponens kulcs
-  order?: number;            // rendezéshez
+  icon: string;             // később: ikon neve / komponens kulcs
+  order: number;            // rendezéshez
 
   visibility?: ModuleVisibility; // pl. "beta" modulok elrejtése / jelölése
 }

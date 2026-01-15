@@ -3,15 +3,14 @@ import type { NextRequest } from "next/server";
 import { locales, defaultLocale, isLocale } from "@smairthub/i18n";
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  console.log("LOCALES:", locales); console.log("PATHNAME:", pathname);
+  const { pathname } = request.nextUrl;  
 
   // 1) Ha már locale-os útvonalon vagyunk → mehet tovább
   const pathnameIsMissingLocale = locales.every(
-    (locale) => !pathname.startsWith(`/${locale}`)
+    (locale) => !pathname.startsWith(`/${locale}`)    
   );
 
+  
   if (!pathnameIsMissingLocale) {
     return NextResponse.next();
   }
@@ -26,10 +25,10 @@ export function middleware(request: NextRequest) {
   return NextResponse.redirect(redirectUrl);
 }
 
-/*export const config = {
+export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.webp).*)",
   ],
-};*/
+};
 
-export const config = { matcher: ["/((?!_next|.*\\..*).*)"], };
+//export const config = { matcher: ["/((?!_next|.*\\..*).*)"], };

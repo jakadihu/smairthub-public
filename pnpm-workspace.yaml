@@ -1,6 +1,6 @@
 packages:
   - 'apps/*'
-  - 'modules/*'
+  - 'panels/*'
   - 'packages/*'
 
 onlyBuiltDependencies:

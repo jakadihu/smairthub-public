@@ -1,6 +1,6 @@
 import type { LocaleCode } from "@smairthub/i18n";
 
-export function ExcelOptimizationModule() {
+export function ExcelOptimizationPanel() {
   return (
     <div>
       <h1>Excel modul</h1>

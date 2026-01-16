@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@modules/*": ["modules/*"],      
+      "@panels/*": ["panels/*"],      
       "@smairthub/i18n": ["packages/i18n"],
       "@smairthub/fonts": ["packages/fonts"]
     }

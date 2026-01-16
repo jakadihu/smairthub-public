@@ -1,8 +1,8 @@
 import { Sheet } from "lucide-react"
-import type { ModuleMeta } from "@modules/types";
+import type { PanelMeta } from "@panels/types";
 import { ExcelOptimizationRootPage } from "./pages"
 
-export const excelOptimizationModuleMeta: ModuleMeta = {
+export const excelOptimizationPanelMeta: PanelMeta = {
 
   id: "excel-optimization",
   slug: "excel-optimization",

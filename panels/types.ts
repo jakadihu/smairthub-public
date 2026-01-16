@@ -1,17 +1,17 @@
 import type { LucideIcon } from "lucide-react"
 
 export type LocaleCode = "hu" | "en";
-export type ModuleId = string;
-export type ModuleVisibility = "public" | "private" | "beta";
+export type PanelId = string;
+export type PanelVisibility = "public" | "private" | "beta";
 
-export type ModulePage = { 
+export type PanelPage = { 
   slug: string 
   label: string
   component: React.ComponentType<{ locale: string }> 
 }
 
-export interface ModuleMeta {
-  id: ModuleId;
+export interface PanelMeta {
+  id: PanelId;
   slug: string; // URL-ben használt azonosító, pl. "excel-ai"
 
   name: Record<LocaleCode, string>;
@@ -26,9 +26,9 @@ export interface ModuleMeta {
   icon: LucideIcon;             // később: ikon neve / komponens kulcs
   order: number;            // rendezéshez
 
-  visibility?: ModuleVisibility; // pl. "beta" modulok elrejtése / jelölése
+  visibility?: PanelVisibility; // pl. "beta" modulok elrejtése / jelölése
 
   component: React.ComponentType<{ locale: string }>
 
-  pages: ModulePage[]
+  pages: PanelPage[]
 }

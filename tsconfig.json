@@ -2,7 +2,7 @@
   "extends": "./tsconfig.base.json",
   "files": [],
   "references": [    
-    { "path": "./modules" },
+    { "path": "./panels" },
     //{ "path": "./packages/i18n" },
     { "path": "./packages" }    
   ],

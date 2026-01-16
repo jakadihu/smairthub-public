@@ -1,7 +1,7 @@
-import type { ModuleDefinition } from "./excel-optimization";
+import type { PanelDefinition } from "./excel-optimization";
 import { excelOptimizationModule } from "./excel-optimization";
 
-export const modules: ModuleDefinition[] = [
+export const panels: PanelDefinition[] = [
   excelOptimizationModule,
   // ide jönnek majd a többiek
 ];

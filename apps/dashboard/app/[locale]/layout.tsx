@@ -2,7 +2,7 @@ import "../globals.css";
 import { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import "@smairthub/fonts/global-font.css";
+import "@smairthub/fonts";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";

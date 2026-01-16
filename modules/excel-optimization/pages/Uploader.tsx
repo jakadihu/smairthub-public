@@ -19,7 +19,7 @@ export default function Uploader() {
     multiple: false,
   })
 
-  return (
+  return (    
     <div
       {...getRootProps()}
       className={`
@@ -59,7 +59,7 @@ export default function Uploader() {
             vagy kattints a feltöltéshez
           </p>
         </>
-      )}
+      )}      
     </div>
   )
 }

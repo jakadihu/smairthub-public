@@ -5,6 +5,7 @@ const config = {
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
+    "../../modules/**/*.{ts,tsx}",
   ],
   ...shared,
 };

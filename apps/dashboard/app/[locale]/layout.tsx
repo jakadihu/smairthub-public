@@ -37,9 +37,7 @@ export default async function RootLayout({
 
   const rawTheme = cookieStore.get("theme")?.value;
   const theme: "light" | "dark" =
-    rawTheme === "dark" || rawTheme === "light" ? rawTheme : "light";
-
-    console.log("TYPE:", typeof params); console.log("IS PROMISE:", params instanceof Promise); console.log("REAL VALUE:", await Promise.resolve(params)); console.log("DIRECT ACCESS:", params.locale);
+    rawTheme === "dark" || rawTheme === "light" ? rawTheme : "light";    
 
   return (
     <html lang={locale} className={theme === "dark" ? "dark" : ""}>

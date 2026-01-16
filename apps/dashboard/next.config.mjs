@@ -1,10 +1,18 @@
 import withNextIntl from "next-intl/plugin";
+import path from "path";
 
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: [ 
-    "panels", 
-  ],
+
+  transpilePackages: ["@panels"],
+
+  webpack: (config) => {
+    config.resolve.alias["@panels"] = path.resolve(
+      __dirname,
+      "../../panels"
+    );
+    return config;
+  },
 };
 
 export default withNextIntl()(nextConfig);

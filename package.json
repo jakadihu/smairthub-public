@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*",
-    "panels/*"
+    "apps/*",    
+    "packages/*",    
+    "panels"    
   ],
   "packageManager": "pnpm@9.0.0",
   "dependencies": {

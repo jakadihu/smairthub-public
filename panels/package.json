@@ -1,4 +1,7 @@
 {
   "name": "@smairthub/panels",
-  "private": true
+  "version": "1.0.0",  
+  "main": "registry.ts",
+  "type": "module",
+  "private": true 
 }

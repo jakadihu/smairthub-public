@@ -29,7 +29,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: ^20
-        version: 20.19.29
+        version: 20.19.30
       '@types/react':
         specifier: ^19
         version: 19.2.8
@@ -81,9 +81,6 @@ importers:
       '@radix-ui/react-visually-hidden':
         specifier: ^1.2.4
         version: 1.2.4(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@smairthub/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -117,7 +114,7 @@ importers:
         version: 4.1.18
       '@types/node':
         specifier: ^20
-        version: 20.19.29
+        version: 20.19.30
       '@types/react':
         specifier: ^19
         version: 19.2.8
@@ -160,7 +157,7 @@ importers:
         version: 4.1.18
       '@types/node':
         specifier: ^20
-        version: 20.19.29
+        version: 20.19.30
       '@types/react':
         specifier: ^19
         version: 19.2.8
@@ -180,13 +177,9 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  packages/config: {}
+  apps/test: {}
 
-  packages/ui:
-    devDependencies:
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
+  packages/fonts: {}
 
 packages:
 
@@ -1541,8 +1534,8 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/node@20.19.29':
-    resolution: {integrity: sha512-YrT9ArrGaHForBaCNwFjoqJWmn8G1Pr7+BH/vwyLHciA9qT/wSiuOhxGCT50JA5xLvFBd6PIiGkE3afxcPE1nw==}
+  '@types/node@20.19.30':
+    resolution: {integrity: sha512-WJtwWJu7UdlvzEAUm484QNg5eAoq5QR08KDNx7g45Usrs2NtOPiX8ugDqmKdXkyL03rBqU5dYNYVQetEpBHq2g==}
 
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
@@ -4639,7 +4632,7 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/node@20.19.29':
+  '@types/node@20.19.30':
     dependencies:
       undici-types: 6.21.0
 

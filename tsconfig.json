@@ -1,10 +1,10 @@
 {
   "extends": "./tsconfig.base.json",
   "files": [],
-  "references": [
-    { "path": "./packages/ui" },
+  "references": [    
     { "path": "./modules" },
-    { "path": "./packages/i18n" }
+    //{ "path": "./packages/i18n" },
+    { "path": "./packages" }    
   ],
   "compilerOptions": {
     "module": "esnext",

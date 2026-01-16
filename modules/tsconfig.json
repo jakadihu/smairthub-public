@@ -4,7 +4,7 @@
     "jsx": "react-jsx",    
     "module": "esnext",
     "moduleResolution": "bundler",
-    "composite": true
+    //"composite": true
   },
   "references": [
     { "path": "../packages/i18n" }

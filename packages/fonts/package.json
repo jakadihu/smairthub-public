@@ -1,0 +1,13 @@
+{
+  "name": "@smairthub/fonts",
+  "version": "1.0.0",
+  "files": [
+    "global-font.css",
+    "index.js"
+  ],
+  "main": "index.js",
+  "exports": {
+    "./global-font.css": "./global-font.css",
+    ".": "./index.js"
+  }
+}

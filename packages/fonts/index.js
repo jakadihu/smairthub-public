@@ -1,0 +1,1 @@
+export * from "./global-font.css";

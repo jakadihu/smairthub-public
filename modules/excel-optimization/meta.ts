@@ -1,8 +1,9 @@
 import { Sheet } from "lucide-react"
 import type { ModuleMeta } from "@modules/types";
-import { ExcelOptimizationRoot } from "./components/ExcelOptimizationRoot"
+import { ExcelOptimizationRootPage } from "./pages"
 
 export const excelOptimizationModuleMeta: ModuleMeta = {
+
   id: "excel-optimization",
   slug: "excel-optimization",
 
@@ -27,5 +28,10 @@ export const excelOptimizationModuleMeta: ModuleMeta = {
 
   visibility: "public",
 
-  component: ExcelOptimizationRoot,
+  component: ExcelOptimizationRootPage,
+
+  pages: [ 
+    { slug: "", component: ExcelOptimizationRootPage, label: "Főoldal" } 
+  ],
+
 };

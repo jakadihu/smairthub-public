@@ -4,6 +4,12 @@ export type LocaleCode = "hu" | "en";
 export type ModuleId = string;
 export type ModuleVisibility = "public" | "private" | "beta";
 
+export type ModulePage = { 
+  slug: string 
+  label: string
+  component: React.ComponentType<{ locale: string }> 
+}
+
 export interface ModuleMeta {
   id: ModuleId;
   slug: string; // URL-ben használt azonosító, pl. "excel-ai"
@@ -22,5 +28,7 @@ export interface ModuleMeta {
 
   visibility?: ModuleVisibility; // pl. "beta" modulok elrejtése / jelölése
 
-  component: React.ComponentType
+  component: React.ComponentType<{ locale: string }>
+
+  pages: ModulePage[]
 }

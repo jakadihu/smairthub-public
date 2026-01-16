@@ -9,5 +9,10 @@
   },
   "welcome": "Welcome to the smairt🗃️hub dashboard!",
   "mobileMenu": "Mobil menü",
-  "brand": "SmairtHub-E"
+  "brand": "SmairtHub-E",
+  "404": {
+    "title": "Module not found",
+    "description": "The requested module could not be found. Please check the URL or return to the dashboard.",
+    "backToDashboard": "Back to Dashboard"
+  }
 }

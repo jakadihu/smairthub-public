@@ -9,5 +9,10 @@
   },
   "welcome": "Üdvözöljük a smairt🗃️hub vezérlőpultján!",
   "mobileMenu": "Mobil menü",
-  "brand": "SmairtHub"
+  "brand": "SmairtHub",
+  "404": {
+    "title": "Modul nem található",
+    "description": "A kért modult nem sikerült megtalálni. Kérjük, ellenőrizze az URL-t, vagy térjen vissza a vezérlőpulthoz.",
+    "backToDashboard": "Vissza a vezérlőpulthoz"
+  }
 }

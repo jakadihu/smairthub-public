@@ -1,14 +1,9 @@
 {
   "extends": "./tsconfig.base.json",
   "files": [],
-  "references": [        
-    //{ "path": "./panels" },
-    //{ "path": "./packages/i18n" },
-    //{ "path": "./packages" }    
-  ],
-  "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "target": "es2017"
-  }
+  "references": [
+    { "path": "./panels" },
+    { "path": "./packages/i18n" },
+    { "path": "./packages" }
+  ]
 }

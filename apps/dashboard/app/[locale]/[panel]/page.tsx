@@ -1,4 +1,4 @@
-import { panels } from "@panels/registry";
+import { panels } from "@/panels/registry";
 import { notFound } from "next/navigation";
 
 export default async function ModulePage({

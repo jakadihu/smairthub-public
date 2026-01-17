@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@packages/ui/button";
+import { Card, CardContent } from "@packages/ui/card";
 import { AlertTriangle } from "lucide-react";
 import { useTranslations } from "next-intl"
 import { usePathname } from "next/navigation"

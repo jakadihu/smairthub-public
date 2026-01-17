@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { defaultLocale, LocaleCode } from "@smairthub/i18n";
-import { panels } from "@panels/registry";
+import { panels } from "@/panels/registry";
 import Link from "next/link";
 
 export default async function DashboardPage({

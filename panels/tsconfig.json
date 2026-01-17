@@ -1,13 +1,15 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx",    
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    //"composite": true
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@smairthub/i18n": ["../packages/i18n"],
+      "@/panels/*": ["./*"],
+      "@packages/ui/*": ["../packages/ui/*"]
+    }
   },
-  "references": [
-    { "path": "../packages/i18n" }
-  ],
-  "include": ["./**/*"]
+  "references": [ { "path": "../packages/ui" } ],
+
+  "include": ["."]
 }

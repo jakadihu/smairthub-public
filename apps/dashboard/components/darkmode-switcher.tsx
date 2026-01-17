@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@packages/ui/button";
 
 export function ThemeSwitcher({ theme: initialTheme }: { theme: "light" | "dark" }) {
   const router = useRouter();

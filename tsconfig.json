@@ -2,9 +2,9 @@
   "extends": "./tsconfig.base.json",
   "files": [],
   "references": [        
-    { "path": "./panels" },
+    //{ "path": "./panels" },
     //{ "path": "./packages/i18n" },
-    { "path": "./packages" }    
+    //{ "path": "./packages" }    
   ],
   "compilerOptions": {
     "module": "esnext",

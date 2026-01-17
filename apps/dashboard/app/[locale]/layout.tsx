@@ -14,7 +14,6 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { defaultLocale } from "@smairthub/i18n";
-import "../../../../panels/all";
 
 
 export const metadata = {
@@ -163,9 +162,10 @@ export default async function RootLayout({
               <div className="flex-1 flex flex-col bg-white dark:bg-black">
                 {/* TOPBAR */}
                 <header className="hidden md:flex h-16 border-b items-center justify-between px-6 bg-white dark:bg-black">
-                  <h1 className="text-lg font-medium tracking-tight text-red-700">
+                  <h1 className="text-lg font-medium tracking-tight text-adamtest">
                     Dashboard
                   </h1>
+                  
 
                   <div className="flex items-center gap-4">
                     <LanguageSwitcher />

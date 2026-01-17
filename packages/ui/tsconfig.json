@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
-    "composite": true
+    "composite": true,
+    "paths": { "@ui/*": ["./*"] },
+    "jsx": "preserve",
+    "module": "esnext",
+    "moduleResolution": "bundler"
   }
 }

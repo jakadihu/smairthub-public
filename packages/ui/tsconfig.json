@@ -1,9 +1,13 @@
 {
   "compilerOptions": {
     "composite": true,
-    "paths": { "@ui/*": ["./*"] },
+    "baseUrl": ".",
+    "paths": { 
+      "@ui/*": ["./*"],
+      "@/lib/*": ["./lib/*"]
+    },
     "jsx": "preserve",
     "module": "esnext",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler"    
   }
 }

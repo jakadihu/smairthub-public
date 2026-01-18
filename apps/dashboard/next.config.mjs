@@ -4,7 +4,7 @@ import path from "path";
 const nextConfig = {
   reactStrictMode: true,
 
-  transpilePackages: ["@panels"],
+  transpilePackages: ["@panels"],  
 
   webpack: (config) => {
     config.resolve.alias["@panels"] = path.resolve(

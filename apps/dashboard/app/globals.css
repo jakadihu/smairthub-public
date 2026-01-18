@@ -2,6 +2,7 @@
 
 @source "./app";
 @source "../../../panels";
+@source "../../../packages/ui";
 
 @custom-variant dark (&:is(.dark *));
 

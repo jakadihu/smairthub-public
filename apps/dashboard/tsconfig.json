@@ -7,9 +7,9 @@
       "@/panels/*": ["../../panels/*"],
       "@smairthub/i18n": ["../../packages/i18n"],
       "@smairthub/fonts": ["../../packages/fonts"],
-      "@/components/*": ["./components/*"],
-      "@/lib/*": ["./lib/*"],
-      "@packages/ui/*": ["../../packages/ui/*"]
+      "@/components/*": ["./components/*"],      
+      "@packages/ui/*": ["../../packages/ui/*"],
+      "@/lib/*": ["../../packages/ui/lib/*"]
     }
   },
   "include": ["."]

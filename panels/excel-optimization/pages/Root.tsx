@@ -6,8 +6,7 @@ import Uploader from "./Uploader";
 import { Button } from "@packages/ui/button";
 import { ArrowRight } from "lucide-react";
 import ProcessingView from "./ProcessingView";
-import { readFileToRows } from "@/panels/_core/ai/readFiles";
-import { analyzeDataWithAI } from "@/panels/_core/ai/analyze";
+import ResultsView from "./ResultsView";
 
 export default function ExcelOptimizationRootPage({
   locale,
@@ -18,28 +17,12 @@ export default function ExcelOptimizationRootPage({
 
   const [file, setFile] = useState<File | null>(null);
   const [isValid, setIsValid] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [step, setStep] = useState<"upload" | "processing" | "done">("upload");
+  const [result, setResult] = useState<any | null>(null);
 
-  async function handleNext() {
+  function handleNext() {
     if (!file) return;
-
     setStep("processing");
-    setProgress(0);
-
-    // 1) fájl → rows
-    const parsed = await readFileToRows(file);
-    setProgress(30);
-
-    // 2) AI elemzés (most még mock)
-    const analysis = await analyzeDataWithAI(parsed.rows);
-    setProgress(70);
-
-    // 3) egyelőre csak eltároljuk – normalizálás később
-    console.log("AI analysis:", analysis);
-
-    setProgress(100);
-    setStep("done");
   }
 
   return (
@@ -71,14 +54,17 @@ export default function ExcelOptimizationRootPage({
       )}
 
       {step === "processing" && (
-        <ProcessingView progress={progress} locale={locale} />
+        <ProcessingView
+          file={file!}
+          locale={locale}
+          onDone={(result) => {
+            setResult(result);
+            setStep("done");
+          }}
+        />
       )}
 
-      {step === "done" && (
-        <div className="py-20 text-center text-xl font-medium">
-          Itt jön majd a következő képernyő (sheet választó / preview)
-        </div>
-      )}
+      {step === "done" && result && <ResultsView result={result} />}
     </div>
   );
 }

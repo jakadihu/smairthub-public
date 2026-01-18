@@ -1,13 +1,19 @@
-const express = require('express');
-const app = express();
+import "dotenv/config";
+console.log("AI_HOST:", process.env.AI_HOST);
 
+import express from "express";
+import cors from "cors";
+import aiRouter from "./routes/ai.js";
+import fileRouter from "./routes/file.js";
+
+const app = express();
+app.use(cors());
 app.use(express.json());
 
-app.get('/status', (req, res) => {
-  res.json({ ok: true, message: 'API running 🚀' });
+app.use("/ai", aiRouter);
+app.use("/file", fileRouter);
+
+const port = process.env.PORT || 3001;
+app.listen(port, () => {
+  console.log(`API running on port ${port}`);
 });
-
-app.get('/', (req, res) => { res.send('API running 🚀'); });
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`API running on port ${PORT}`));

@@ -19,6 +19,8 @@ export default function ExcelOptimizationRootPage({
   const [isValid, setIsValid] = useState(false);
   const [step, setStep] = useState<"upload" | "processing" | "done">("upload");
   const [result, setResult] = useState<any | null>(null);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [rows, setRows] = useState<any[][]>([]);
 
   function handleNext() {
     if (!file) return;
@@ -29,14 +31,16 @@ export default function ExcelOptimizationRootPage({
     <div className="space-y-6">
       {step === "upload" && (
         <>
-          <h1>{t.title}</h1>
-          <p>{t.upload}</p>
+          <h1>{t("title")}</h1>
+          <p>{t("upload")}</p>
 
           <Uploader
             locale={locale}
-            onFileChange={(f, valid) => {
+            onFileChange={(f, valid, h, r) => {
               setFile(f);
               setIsValid(valid);
+              if (h) setHeaders(h);
+              if (r) setRows(r);
             }}
           />
 
@@ -46,7 +50,7 @@ export default function ExcelOptimizationRootPage({
               disabled={!file || !isValid}
               className="flex items-center gap-2"
             >
-              {t.continue}
+              {t("continue")}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
@@ -55,16 +59,17 @@ export default function ExcelOptimizationRootPage({
 
       {step === "processing" && (
         <ProcessingView
-          file={file!}
-          locale={locale}
-          onDone={(result) => {
+          file={file}
+          headers={headers}
+          rows={rows}
+          onComplete={(result) => {
             setResult(result);
             setStep("done");
           }}
         />
       )}
 
-      {step === "done" && result && <ResultsView result={result} />}
+      {step === "done" && result && <ResultsView result={result} t={t} />}
     </div>
   );
 }

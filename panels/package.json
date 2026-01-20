@@ -1,7 +1,13 @@
 {
   "name": "@smairthub/panels",
-  "version": "1.0.0",  
+  "version": "1.0.0",
   "main": "registry.ts",
   "type": "module",
-  "private": true 
+  "private": true,
+  "dependencies": {
+    "papaparse": "^5.5.3"
+  },
+  "devDependencies": {
+    "@types/papaparse": "^5.5.2"
+  }
 }

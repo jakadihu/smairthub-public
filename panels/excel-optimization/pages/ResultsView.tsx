@@ -1,57 +1,91 @@
 "use client";
 
-export default function ResultsView({ result }: { result: any }) {
-  const { sheets, rows, analysis } = result;
+import { useI18n } from "../useI18n";
 
-  const previewRows = rows.slice(0, 10);
+export default function ResultsView({ result, t }: { result: any, t: (key: string) => string; }) {  
+  //const t = useI18n(locale);
+
+  if (!result) {
+    return (
+      <div className="p-6">
+        <p className="text-muted-foreground">Nincs eredmény.</p>
+      </div>
+    );
+  }
+
+  const { headers, rows, summary } = result;
+
+  // A headers lehet string[] vagy objektum[]
+  const headerLabels = Array.isArray(headers)
+    ? headers.map((h: any) =>
+        typeof h === "string"
+          ? h
+          : h.normalized ?? h.original ?? h.key ?? "?"
+      )
+    : [];
 
   return (
-    <div className="space-y-10 py-10">
-      <h1 className="text-2xl font-bold">Elemzés eredménye</h1>
+    <div className="space-y-6 p-6">
+      <h1 className="text-xl font-semibold">{t("results.title")}</h1>
 
-      <div className="grid grid-cols-2 gap-6">
-        <div className="p-4 border rounded-lg">
-          <h2 className="font-medium mb-2">Sheet-ek</h2>
-          <p>{sheets.join(", ")}</p>
+      {/* Fejlécek */}
+      <div className="p-4 border rounded-lg">
+        <h2 className="font-medium mb-2">{t("results.headers")}</h2>
+        <p className="text-sm text-muted-foreground">
+          {headerLabels.join(", ")}
+        </p>
+      </div>
+
+      {/* Sorok eredményei */}
+      <div className="p-4 border rounded-lg">
+        <h2 className="font-medium mb-2">{t("results.rows")}</h2>
+
+        <div className="space-y-3">
+          {rows?.map((row: any, i: number) => (
+            <div
+              key={i}
+              className="p-3 rounded bg-muted/50 border flex flex-col gap-1"
+            >
+              <div className="text-sm font-medium">
+                {t("results.row")} #{row.index + 1}
+              </div>
+
+              {row.success ? (
+                <div className="text-green-600 text-sm">
+                  {t("results.valid")}
+                </div>
+              ) : (
+                <div className="text-red-600 text-sm">
+                  {t("results.invalid")}: {row.errorMessage}
+                </div>
+              )}
+
+              {/* Eredeti sor */}
+              <div className="text-xs text-muted-foreground">
+                {t("results.original")}: {row.original.join(", ")}
+              </div>
+
+              {/* Normalizált adatok */}
+              {row.normalized && (
+                <div className="text-xs text-muted-foreground">
+                  {t("results.normalized")}:{" "}
+                  {JSON.stringify(row.normalized)}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
+      </div>
 
+      {/* Összegzés */}
+      {summary && (
         <div className="p-4 border rounded-lg">
-          <h2 className="font-medium mb-2">Sorok száma</h2>
-          <p>{rows.length}</p>
-        </div>
-
-        <div className="p-4 border rounded-lg">
-          <h2 className="font-medium mb-2">AI által javasolt header</h2>
-          <pre className="text-sm bg-muted p-2 rounded">
-            {JSON.stringify(analysis.header, null, 2)}
+          <h2 className="font-medium mb-2">{t("results.summary")}</h2>
+          <pre className="text-xs bg-muted p-3 rounded">
+            {JSON.stringify(summary, null, 2)}
           </pre>
         </div>
-
-        <div className="p-4 border rounded-lg">
-          <h2 className="font-medium mb-2">Anomáliák</h2>
-          <p>{analysis.anomalies.length} találat</p>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="font-medium mb-3">Előnézet (első 10 sor)</h2>
-
-        <div className="overflow-auto border rounded-lg">
-          <table className="w-full text-sm">
-            <tbody>
-              {previewRows.map((row: any[], i: number) => (
-                <tr key={i} className="border-b">
-                  {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-2 border-r">
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

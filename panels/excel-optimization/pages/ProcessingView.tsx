@@ -1,70 +1,236 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { Progress } from "@packages/ui/progress";
-import { useI18n } from "../useI18n";
 
-import { readFileToRows } from "@/panels/_core/ai/readFiles";
-import { analyzeDataWithAI } from "@/panels/_core/ai/analyze";
+interface ProcessingViewProps {
+  file: File | null;
+  headers: string[];
+  rows: any[][];
+  onComplete: (result: any) => void;
+}
 
 export default function ProcessingView({
   file,
-  locale,
-  onDone,
-}: {
-  file: File;
-  locale: string;
-  onDone: (result: any) => void;
-}) {
-  const t = useI18n(locale);
+  headers,
+  rows,
+  onComplete,
+}: ProcessingViewProps) {
+  const [steps, setSteps] = useState({
+    fileReceived: false,
+    fileReceivedTime: null as number | null,
 
-  const [progress, setProgress] = useState(0);
+    fileValidated: false,
+    fileValidatedTime: null as number | null,
+
+    headersNormalized: false,
+    headersNormalizedTime: null as number | null,
+
+    rowsExtracted: false,
+    rowsExtractedTime: null as number | null,
+
+    rowsProcessing: 0,
+    rowsTotal: 0,
+    rowsProcessingStart: null as number | null,
+    rowsProcessingEnd: null as number | null,
+
+    done: false,
+    doneTime: null as number | null,
+  });
+
+  const [error, setError] = useState<string | null>(null);
+
+  const API = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    async function run() {
-      // 1) Fájl beolvasása
-      setProgress(10);
-      const parsed = await readFileToRows(file);      
+    // --- SSE kapcsolat ---
+    const es = new EventSource(`${API}/progress-stream`);
 
-      // 2) AI elemzés
-      setProgress(40);
-      const analysis = await analyzeDataWithAI(parsed.rows);
-      console.log("AI analysis:", analysis);
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
 
-      // 3) Normalizálás (később)
-      setProgress(70);
+        if (data.current !== undefined && data.total !== undefined) {
+          setSteps((s) => {
+            const isFirst = s.rowsProcessingStart === null && data.current === 1;
+            const isLast = data.current === data.total;
 
-      // 4) Befejezés
-      setProgress(100);
+            return {
+              ...s,
+              rowsProcessing: Math.max(s.rowsProcessing, data.current),
+              rowsTotal: data.total,
+              rowsProcessingStart: isFirst ? performance.now() : s.rowsProcessingStart,
+              rowsProcessingEnd: isLast ? performance.now() : s.rowsProcessingEnd,
+            };
+          });
+        }
+      } catch (err) {
+        console.error("SSE parse error:", err);
+      }
+    };
 
-      // átadjuk az eredményt a root-nak 
-      onDone({ 
-        sheets: parsed.sheets,
-        rows: parsed.rows,
-        analysis,
-      });
+    es.onerror = () => {
+      console.error("SSE connection error");
+    };
+
+    // --- A feldolgozás indítása ---
+    async function process() {
+      try {
+        // 1) Fájl fogadva
+        setSteps((s) => ({
+          ...s,
+          fileReceived: true,
+          fileReceivedTime: performance.now(),
+        }));
+
+        await new Promise((r) => setTimeout(r, 300));
+
+        // 2) Fájl ellenőrzése
+        setSteps((s) => ({
+          ...s,
+          fileValidated: true,
+          fileValidatedTime: performance.now(),
+        }));
+
+        // 3) Header normalizálás
+        const normalizedHeaders = await fetch(`${API}/ai/normalize-headers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ headers }),
+        }).then((r) => r.json());
+
+        setSteps((s) => ({
+          ...s,
+          headersNormalized: true,
+          headersNormalizedTime: performance.now(),
+        }));
+
+        // 4) Sorok megállapítása
+        setSteps((s) => ({
+          ...s,
+          rowsExtracted: true,
+          rowsExtractedTime: performance.now(),
+          rowsTotal: rows.length,
+        }));
+
+        // 5) Batch feldolgozás
+        const batchResponse = await fetch(`${API}/ai/validate-batch`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            headers: normalizedHeaders,
+            rows: rows,
+          }),
+        }).then((r) => r.json());
+
+        // 6) Kész
+        setSteps((s) => ({
+          ...s,
+          done: true,
+          doneTime: performance.now(),
+        }));
+
+        //onComplete(batchResponse);
+      } catch (err) {
+        console.error(err);
+        setError("Hiba történt a feldolgozás során.");
+      }
     }
 
-    run();
-  }, [file]);
+    process();
+
+    return () => {
+      es.close();
+    };
+  }, []);
+
+  // idő formázó
+  const fmt = (t: number | null, base: number | null) =>
+    t && base ? ((t - base) / 1000).toFixed(2) + "s" : null;
 
   return (
-    <div className="flex flex-col items-center justify-center py-20 space-y-6">
-      <Loader2 className="w-10 h-10 animate-spin text-primary" />
+    <div className="p-6 space-y-6">
+      <h2 className="text-xl font-semibold">Feldolgozás folyamatban…</h2>
 
-      <div className="text-center space-y-2">
-        <p className="text-lg font-medium">{t.processing}</p>
+      {error && (
+        <div className="p-3 bg-red-500/20 text-red-700 rounded">{error}</div>
+      )}
 
-        <p className="text-sm text-muted-foreground">
-          {progress < 30 && "1. Fájl beolvasása…"}
-          {progress >= 30 && progress < 60 && "2. Adatok előkészítése…"}
-          {progress >= 60 && progress < 90 && "3. Normalizálás…"}
-          {progress >= 90 && "4. Befejezés…"}
-        </p>
+      <div className="space-y-4">
+        <StepItem
+          label="Fájl fogadva"
+          done={steps.fileReceived}
+          time={fmt(steps.fileReceivedTime, steps.fileReceivedTime)}
+        />
+
+        <StepItem
+          label="Fájl ellenőrzése"
+          done={steps.fileValidated}
+          time={fmt(steps.fileValidatedTime, steps.fileReceivedTime)}
+        />
+
+        <StepItem
+          label="Fejlécek normalizálása"
+          done={steps.headersNormalized}
+          time={fmt(steps.headersNormalizedTime, steps.fileValidatedTime)}
+        />
+
+        <StepItem
+          label="Sorok megállapítása"
+          done={steps.rowsExtracted}
+          time={fmt(steps.rowsExtractedTime, steps.headersNormalizedTime)}
+        />
+
+        <div>
+          <StepItem
+            label={`Sorok feldolgozása (${steps.rowsProcessing}/${steps.rowsTotal})`}
+            done={steps.done}
+            time={
+              steps.rowsProcessingEnd && steps.rowsProcessingStart
+                ? fmt(steps.rowsProcessingEnd, steps.rowsProcessingStart)
+                : null
+            }
+          />
+
+          {!steps.done && steps.rowsTotal > 0 && (
+            <div className="w-full bg-muted h-2 rounded mt-2">
+              <div
+                className="bg-primary h-2 rounded transition-all"
+                style={{
+                  width: `${(steps.rowsProcessing / steps.rowsTotal) * 100}%`,
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
 
-      <Progress value={progress} className="w-64" />
+function StepItem({
+  label,
+  done,
+  time,
+}: {
+  label: string;
+  done: boolean;
+  time?: string | null;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className={`w-4 h-4 rounded-full border transition-all ${
+          done
+            ? "bg-green-500 border-green-600"
+            : "bg-muted border-muted-foreground"
+        }`}
+      />
+      <span className="text-sm">
+        {label}
+        {done && time && (
+          <span className="text-xs text-muted-foreground ml-2">({time})</span>
+        )}
+      </span>
     </div>
   );
 }

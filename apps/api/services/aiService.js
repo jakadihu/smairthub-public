@@ -1,14 +1,18 @@
-const AI_HOST = process.env.AI_HOST;
-const AI_MODEL = process.env.AI_MODEL || "phi3:medium";
+//const AI_HOST = process.env.AI_HOST;
+//const AI_MODEL = process.env.AI_MODEL || "gemma:2b";
+//const AI_HOST = "http://smairthub.com:11434";
+const AI_MODEL = "gpt-4o-mini";
 
 export async function generateAIResponse(prompt) {
-  const res = await fetch(`${AI_HOST}/api/generate`, {
+  const res = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
     body: JSON.stringify({
       model: AI_MODEL,
-      prompt,
-      stream: false,
+      input: prompt,
     }),
   });
 
@@ -17,7 +21,23 @@ export async function generateAIResponse(prompt) {
   }
 
   const data = await res.json();
-  return data.response;
+
+  // 1) Ha van output_text → ezt használjuk
+  if (data.output_text) {
+    return data.output_text;
+  }
+
+  // 2) Ha nincs, akkor a strukturált outputból szedjük ki
+  const text =
+    data.output?.[0]?.content?.[0]?.text ??
+    data.output?.[0]?.content?.[0]?.output_text;
+
+  if (!text) {
+    console.error("Unexpected AI response format:", data);
+    throw new Error("AI response missing text");
+  }
+
+  return text;
 }
 
 export async function normalizeHeaders(headers) {
@@ -44,16 +64,9 @@ export async function normalizeHeaders(headers) {
 
 function buildHeaderNormalizePrompt(headers) {
   return `
-You are a strict data normalizer.
-Your task is to convert the given header labels into English snake_case field names.
-
-Rules:
-- Output MUST be valid JSON.
-- Output MUST contain ONLY the JSON object.
-- NO explanation, NO comments, NO extra text.
-- NO code blocks.
-- Keep keys exactly as received.
-- Values must be normalized English snake_case identifiers.
+Convert the given header labels to English snake_case.
+Return ONLY valid JSON: { "original": "normalized" }.
+No text, no comments.
 
 Headers: ${JSON.stringify(headers)}
 `;
@@ -90,8 +103,8 @@ export async function validateRow(headers, row) {
 
 function buildRowValidationPrompt(headers, row) {
   return `
-You are a strict data validator. 
-Return ONLY valid JSON with this exact structure:
+Validate the row using the given headers.
+Return ONLY valid JSON:
 
 {
   "valid": boolean,
@@ -100,21 +113,15 @@ Return ONLY valid JSON with this exact structure:
 }
 
 Rules:
-- Use only the provided fields.
-- Detect empty, missing, malformed or inconsistent values.
+- Use only provided fields.
+- Detect empty, malformed, inconsistent values.
 - Convert dates to YYYY-MM-DD.
 - Convert numbers to plain numeric form.
-- No explanation, no comments, no code blocks.
-- Output MUST be valid JSON.
 
 Headers: ${JSON.stringify(headers)}
 Row: ${JSON.stringify(row)}
-
-Return ONLY the JSON object.
 `;
 }
-
-
 
 export function buildBatchSummary(results) {
   const totalRows = results.length;
@@ -148,6 +155,3 @@ export function buildBatchSummary(results) {
     errorTypes,
   };
 }
-
-
-

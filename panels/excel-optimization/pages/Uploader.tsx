@@ -5,19 +5,56 @@ import { useDropzone } from "react-dropzone";
 import { Upload, FileSpreadsheet, FileText, X } from "lucide-react";
 import { Button } from "@packages/ui/button";
 import { useI18n } from "../useI18n";
+import * as XLSX from "xlsx";
 
 export default function Uploader({
   locale,
   onFileChange,
 }: {
   locale: string;
-  onFileChange: (file: File | null, valid: boolean) => void;
+  onFileChange: (
+    file: File | null,
+    valid: boolean,
+    headers?: string[],
+    rows?: any[][]
+  ) => void;
 }) {
   const [files, setFiles] = useState<File[]>([]);
   const t = useI18n(locale);
 
+  // Excel → CSV konverzió
+  const convertToCsvIfNeeded = async (file: File): Promise<File> => {
+    const isExcel =
+      file.name.endsWith(".xls") || file.name.endsWith(".xlsx");
+
+    if (!isExcel) return file;
+
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: "array" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const csv = XLSX.utils.sheet_to_csv(sheet, {
+      FS: ",",
+      RS: "\n",
+      blankrows: false,
+    });
+
+    return new File([csv], "converted.csv", { type: "text/csv" });
+  };
+
+  // CSV feldolgozás → headers + rows
+  const parseCsv = (csvText: string) => {
+    const lines = csvText.split("\n").filter(Boolean);
+
+    const headers = lines[0].split(",").map(h => h.trim());
+    const rows = lines.slice(1).map(line =>
+      line.split(",").map(cell => cell.trim())
+    );
+
+    return { headers, rows };
+  };
+
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
+    async (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
       setFiles(acceptedFiles);
 
@@ -26,12 +63,28 @@ export default function Uploader({
         return;
       }
 
-      const valid =
+      const isValid =
         file.type.includes("excel") ||
         file.type.includes("spreadsheet") ||
-        file.type.includes("csv");
+        file.type.includes("csv") ||
+        file.name.endsWith(".xls") ||
+        file.name.endsWith(".xlsx") ||
+        file.name.endsWith(".csv");
 
-      onFileChange(file, valid);
+      if (!isValid) {
+        onFileChange(null, false);
+        return;
+      }
+
+      // XLS/XLSX → CSV konverzió
+      const csvFile = await convertToCsvIfNeeded(file);
+
+      // CSV beolvasása
+      const text = await csvFile.text();
+      const { headers, rows } = parseCsv(text);
+
+      // Visszaadjuk a feldolgozott adatokat
+      onFileChange(csvFile, true, headers, rows);
     },
     [onFileChange]
   );
@@ -70,18 +123,18 @@ export default function Uploader({
 
         {isDragActive ? (
           <p className="font-medium text-accent-foreground">
-            {t.drop_here}
+            {t("drop_here")}
           </p>
         ) : (
           <>
-            <p className="font-medium text-foreground">{t.drag_here}</p>
+            <p className="font-medium text-foreground">{t("drag_here")}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {t.click_to_upload}
+              {t("click_to_upload")}
             </p>
 
             <Button variant="secondary" className="mt-4 pointer-events-none">
               <Upload className="w-4 h-4 mr-2" />
-              {t.select_file}
+              {t("select_file")}
             </Button>
           </>
         )}
@@ -90,7 +143,7 @@ export default function Uploader({
       {files.length > 0 && (
         <div className="mt-6 space-y-3">
           <p className="text-sm font-medium text-foreground">
-            {t.uploaded_file}
+            {t("uploaded_file")}
           </p>
 
           {files.map((file, i) => (

@@ -129,7 +129,7 @@ export default function ProcessingView({
           doneTime: performance.now(),
         }));
 
-        //onComplete(batchResponse);
+        onComplete(batchResponse);
       } catch (err) {
         console.error(err);
         setError("Hiba történt a feldolgozás során.");

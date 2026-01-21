@@ -1,6 +1,8 @@
 export async function callAI(prompt: string): Promise<string> {
   try {
-    const response = await fetch("/api/ai", {
+    const API = process.env.NEXT_PUBLIC_API_URL;
+
+    const response = await fetch(`${API}/ai`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -18,7 +20,12 @@ export async function callAI(prompt: string): Promise<string> {
       throw new Error("Invalid AI response format");
     }
 
-    return data.response;
+    const cleaned = data.response
+      .replace(/```json/i, "")
+      .replace(/```/g, "")
+      .trim();
+
+    return cleaned;
   } catch (err: any) {
     console.error("callAI error:", err);
     throw new Error("AI request failed");

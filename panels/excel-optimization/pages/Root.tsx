@@ -5,6 +5,7 @@ import { useI18n } from "../useI18n";
 import Uploader from "./Uploader";
 import { Button } from "@packages/ui/button";
 import { ArrowRight } from "lucide-react";
+import AnalyzeView from "./AnalyzeView/AnalyzeView";
 import ProcessingView from "./ProcessingView";
 import ResultsView from "./ResultsView";
 
@@ -15,20 +16,24 @@ export default function ExcelOptimizationRootPage({
 }) {
   const t = useI18n(locale);
 
+  const [step, setStep] =
+    useState<"upload" | "analyze" | "processing" | "done">("upload");
+
   const [file, setFile] = useState<File | null>(null);
   const [isValid, setIsValid] = useState(false);
-  const [step, setStep] = useState<"upload" | "processing" | "done">("upload");
+
+  const [analysis, setAnalysis] = useState<any | null>(null);
+  const [config, setConfig] = useState<any | null>(null);
   const [result, setResult] = useState<any | null>(null);
-  const [headers, setHeaders] = useState<string[]>([]);
-  const [rows, setRows] = useState<any[][]>([]);
 
   function handleNext() {
     if (!file) return;
-    setStep("processing");
+    setStep("analyze");
   }
 
   return (
     <div className="space-y-6">
+      {/* 1) FÁJL FELTÖLTÉS */}
       {step === "upload" && (
         <>
           <h1>{t("title")}</h1>
@@ -36,11 +41,9 @@ export default function ExcelOptimizationRootPage({
 
           <Uploader
             locale={locale}
-            onFileChange={(f, valid, h, r) => {
+            onFileChange={(f, valid) => {
               setFile(f);
               setIsValid(valid);
-              if (h) setHeaders(h);
-              if (r) setRows(r);
             }}
           />
 
@@ -57,11 +60,23 @@ export default function ExcelOptimizationRootPage({
         </>
       )}
 
-      {step === "processing" && (
-        <ProcessingView
+      {/* 2) ELEMZÉS (fejlécek, típusok, preview, időbecslés) */}
+      {step === "analyze" && file && (
+        <AnalyzeView
           file={file}
-          headers={headers}
-          rows={rows}
+          onConfigured={(config, analysis) => {
+            setConfig(config);
+            setAnalysis(analysis);
+            setStep("processing");
+          }}
+        />
+      )}
+
+      {/* 3) FELDOLGOZÁS (SSE, progress, cancel) */}
+      {step === "processing" && config && (
+        <ProcessingView
+          config={config}
+          analysis={analysis}
           onComplete={(result) => {
             setResult(result);
             setStep("done");
@@ -69,7 +84,10 @@ export default function ExcelOptimizationRootPage({
         />
       )}
 
-      {step === "done" && result && <ResultsView result={result} t={t} />}
+      {/* 4) EREDMÉNYEK */}
+      {step === "done" && result && (
+        <ResultsView result={result} t={t} />
+      )}
     </div>
   );
 }

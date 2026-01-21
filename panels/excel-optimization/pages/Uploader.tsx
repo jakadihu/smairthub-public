@@ -16,7 +16,7 @@ export default function Uploader({
     file: File | null,
     valid: boolean,
     headers?: string[],
-    rows?: any[][]
+    rows?: any[][],
   ) => void;
 }) {
   const [files, setFiles] = useState<File[]>([]);
@@ -24,8 +24,7 @@ export default function Uploader({
 
   // Excel → CSV konverzió
   const convertToCsvIfNeeded = async (file: File): Promise<File> => {
-    const isExcel =
-      file.name.endsWith(".xls") || file.name.endsWith(".xlsx");
+    const isExcel = file.name.endsWith(".xls") || file.name.endsWith(".xlsx");
 
     if (!isExcel) return file;
 
@@ -45,10 +44,10 @@ export default function Uploader({
   const parseCsv = (csvText: string) => {
     const lines = csvText.split("\n").filter(Boolean);
 
-    const headers = lines[0].split(",").map(h => h.trim());
-    const rows = lines.slice(1).map(line =>
-      line.split(",").map(cell => cell.trim())
-    );
+    const headers = lines[0].split(",").map((h) => h.trim());
+    const rows = lines
+      .slice(1)
+      .map((line) => line.split(",").map((cell) => cell.trim()));
 
     return { headers, rows };
   };
@@ -76,17 +75,9 @@ export default function Uploader({
         return;
       }
 
-      // XLS/XLSX → CSV konverzió
-      const csvFile = await convertToCsvIfNeeded(file);
-
-      // CSV beolvasása
-      const text = await csvFile.text();
-      const { headers, rows } = parseCsv(text);
-
-      // Visszaadjuk a feldolgozott adatokat
-      onFileChange(csvFile, true, headers, rows);
+      onFileChange(file, true);
     },
-    [onFileChange]
+    [onFileChange],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -122,9 +113,7 @@ export default function Uploader({
         />
 
         {isDragActive ? (
-          <p className="font-medium text-accent-foreground">
-            {t("drop_here")}
-          </p>
+          <p className="font-medium text-accent-foreground">{t("drop_here")}</p>
         ) : (
           <>
             <p className="font-medium text-foreground">{t("drag_here")}</p>

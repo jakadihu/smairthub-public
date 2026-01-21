@@ -15,7 +15,6 @@ import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { defaultLocale } from "@smairthub/i18n";
 
-
 export const metadata = {
   title: "SmairtHub Dashboard",
   description: "Excel AI és adatkezelő platform",
@@ -29,19 +28,27 @@ export default async function RootLayout({
   params: { locale: string };
 }) {
   const cookieStore = await cookies();
-  
+
   const resolvedParams = await params;
-  const locale = resolvedParams.locale || defaultLocale;    
+  const locale = resolvedParams.locale || defaultLocale;
   const t = await getTranslations({ locale, namespace: "common" });
 
-  const messages = { common: (await import(`../../messages/${locale}/common.json`)).default };
+  const messages = {
+    common: (await import(`../../messages/${locale}/common.json`)).default,
+  };
 
   const rawTheme = cookieStore.get("theme")?.value;
   const theme: "light" | "dark" =
-    rawTheme === "dark" || rawTheme === "light" ? rawTheme : "light";    
+    rawTheme === "dark" || rawTheme === "light" ? rawTheme : "light";
 
   return (
     <html lang={locale} className={theme === "dark" ? "dark" : ""}>
+      <head>
+        <script
+          src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"
+          defer
+        />
+      </head>
       {/* Light: fehér háttér, Dark: fekete háttér */}
       <body className="min-h-screen bg-white dark:bg-black">
         <NextIntlClientProvider locale={locale} messages={messages}>
@@ -165,7 +172,6 @@ export default async function RootLayout({
                   <h1 className="text-lg font-medium tracking-tight text-adamtest">
                     Dashboard
                   </h1>
-                  
 
                   <div className="flex items-center gap-4">
                     <LanguageSwitcher />

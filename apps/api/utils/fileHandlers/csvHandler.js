@@ -43,6 +43,11 @@ export const handleCsv = {
       skip_empty_lines: true,
       trim: true,
       to_line: 5, // több sor preview
+      relax_column_count: true,
+      relax_column_count_less: true,
+      relax_column_count_more: true,
+      relax_quotes: true,
+      skip_empty_lines: true      
     });
 
     return {
@@ -70,6 +75,10 @@ export const handleCsv = {
       columns: false,
       skip_empty_lines: false,
       trim: false,
+      relax_column_count: true,
+      relax_column_count_less: true,
+      relax_column_count_more: true,
+      relax_quotes: true,      
     });
 
     return {

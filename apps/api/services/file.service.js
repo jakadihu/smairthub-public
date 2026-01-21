@@ -31,7 +31,7 @@ export async function handleFileInspect(req, res) {
   try {
     const file = req.file;
     const type = normalizeFileType(file);
-    const meta = await inspectFile(file);
+    const meta = await inspectFile(file);    
 
     res.json({
       type,

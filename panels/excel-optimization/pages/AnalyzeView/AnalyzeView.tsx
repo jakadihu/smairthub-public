@@ -18,6 +18,7 @@ type SheetData = {
   rowCount: number;
 };
 
+
 export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
   const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -181,12 +182,15 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
   // RENDER
   // -------------------------------------------------------
 
-  if (loading) {
+  if (loading || processing) {
     return (
-      <div className="flex items-center gap-2">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        Fájl elemzése…
-      </div>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+      <lottie-player src="https://lottie.host/6340573a-1db3-412d-948e-78884c89a393/t5rGgNhyMO.json" background="transparent" speed="1" style={{ width: "200px", height: "200px" }} loop autoplay ></lottie-player>
+
+      <p className="text-sm text-muted-foreground">
+        Feldolgozás folyamatban…
+      </p>
+    </div>
     );
   }
 

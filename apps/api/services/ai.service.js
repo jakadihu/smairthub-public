@@ -11,13 +11,13 @@ export async function handleAIRequest(req, res) {
     }
 
     // --- Model call ---
-    const response = await callModel(prompt);
+    const response = await callModel(prompt);    
 
     // --- Success ---
     return res.json({ response });
-
   } catch (err) {
     console.error("AI service error:", err);
     return res.status(500).json({ error: "AI request failed" });
   }
 }
+

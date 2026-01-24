@@ -2,7 +2,7 @@ import withNextIntl from "next-intl/plugin";
 import path from "path";
 
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
 
   transpilePackages: ["@panels"],
 

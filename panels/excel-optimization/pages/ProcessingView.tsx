@@ -1,236 +1,248 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@packages/ui/button";
+import { Progress } from "@packages/ui/progress";
+import { ArrowLeft } from "lucide-react";
+import { processBatch } from "../logic/processBatch";
 
-interface ProcessingViewProps {
-  file: File | null;
-  headers: string[];
-  rows: any[][];
-  onComplete: (result: any) => void;
-}
+// --- CONFIG --- //
+const CONCURRENCY = 8;
+const BATCH_SIZE = 5;
 
 export default function ProcessingView({
-  file,
   headers,
+  types,
   rows,
+  onBack,
   onComplete,
-}: ProcessingViewProps) {
-  const [steps, setSteps] = useState({
-    fileReceived: false,
-    fileReceivedTime: null as number | null,
+}: {
+  headers: string[];
+  types: Record<string, string>;
+  rows: any[];
+  onBack: () => void;
+  onComplete: (result: any) => void;
+}) {
+  const processedRef = useRef<any[]>([]);
+  const cancelledRef = useRef(false);
 
-    fileValidated: false,
-    fileValidatedTime: null as number | null,
+  const [progress, setProgress] = useState(0);
+  const currentOpRef = useRef(0);
+  const totalOpsRef = useRef(0);
 
-    headersNormalized: false,
-    headersNormalizedTime: null as number | null,
+  const [done, setDone] = useState(false);
 
-    rowsExtracted: false,
-    rowsExtractedTime: null as number | null,
-
-    rowsProcessing: 0,
-    rowsTotal: 0,
-    rowsProcessingStart: null as number | null,
-    rowsProcessingEnd: null as number | null,
-
-    done: false,
-    doneTime: null as number | null,
-  });
-
-  const [error, setError] = useState<string | null>(null);
-
-  const API = process.env.NEXT_PUBLIC_API_URL;
+  const startTimeRef = useRef<number | null>(null);
+  const [endTime, setEndTime] = useState<number | null>(null);
 
   useEffect(() => {
-    // --- SSE kapcsolat ---
-    const es = new EventSource(`${API}/progress-stream`);
+    console.log("%c[ProcessingView] useEffect START", "color:#ffaa00");
+    let active = true;
+    cancelledRef.current = false;
 
-    es.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
+    async function run() {
+      console.log("%c[RUN] START", "color:#ffaa00");
 
-        if (data.current !== undefined && data.total !== undefined) {
-          setSteps((s) => {
-            const isFirst = s.rowsProcessingStart === null && data.current === 1;
-            const isLast = data.current === data.total;
+      processedRef.current = [];
+      currentOpRef.current = 0;
+      setProgress(0);
 
-            return {
-              ...s,
-              rowsProcessing: Math.max(s.rowsProcessing, data.current),
-              rowsTotal: data.total,
-              rowsProcessingStart: isFirst ? performance.now() : s.rowsProcessingStart,
-              rowsProcessingEnd: isLast ? performance.now() : s.rowsProcessingEnd,
-            };
-          });
-        }
-      } catch (err) {
-        console.error("SSE parse error:", err);
+      startTimeRef.current = Date.now();
+      setEndTime(null);
+
+      const totalRows = rows.length;
+      console.log("%c[RUN] totalRows = " + totalRows, "color:#ffaa00");
+
+      if (totalRows === 0) return;
+
+      // --- FIXED CHUNKING --- //
+      console.log(
+        `%c[CHUNK] Creating chunks with batchSize=${BATCH_SIZE}`,
+        "color:#33ccff"
+      );
+
+      const chunks: any[][] = [];
+      for (let i = 0; i < totalRows; i += BATCH_SIZE) {
+        const chunk = rows.slice(i, i + BATCH_SIZE);
+        chunks.push(chunk);
+        console.log(
+          `%c[CHUNK] Created chunk ${chunks.length - 1} (size=${chunk.length})`,
+          "color:#33ccff"
+        );
       }
-    };
 
-    es.onerror = () => {
-      console.error("SSE connection error");
-    };
+      const concurrency = Math.min(CONCURRENCY, chunks.length);
+      console.log(
+        `%c[RUN] Using concurrency=${concurrency}`,
+        "color:#33ccff"
+      );
 
-    // --- A feldolgozás indítása ---
-    async function process() {
-      try {
-        // 1) Fájl fogadva
-        setSteps((s) => ({
-          ...s,
-          fileReceived: true,
-          fileReceivedTime: performance.now(),
-        }));
+      // progress = 2 ops per chunk (BE + KI)
+      totalOpsRef.current = chunks.length * 2;
+      console.log(
+        `%c[RUN] totalOps = ${totalOpsRef.current}`,
+        "color:#ffaa00"
+      );
 
-        await new Promise((r) => setTimeout(r, 300));
+      // --- DISTRIBUTE CHUNKS --- //
+      const workerChunks: any[][][] = Array.from(
+        { length: concurrency },
+        () => []
+      );
 
-        // 2) Fájl ellenőrzése
-        setSteps((s) => ({
-          ...s,
-          fileValidated: true,
-          fileValidatedTime: performance.now(),
-        }));
+      chunks.forEach((chunk, i) => {
+        workerChunks[i % concurrency].push(chunk);
+      });
 
-        // 3) Header normalizálás
-        const normalizedHeaders = await fetch(`${API}/ai/normalize-headers`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ headers }),
-        }).then((r) => r.json());
+      console.log("%c[WORKERS] Distribution:", "color:#33ccff", workerChunks);
 
-        setSteps((s) => ({
-          ...s,
-          headersNormalized: true,
-          headersNormalizedTime: performance.now(),
-        }));
+      // --- WORKER --- //
+      async function worker(chunksForThisWorker: any[][], workerIndex: number) {
+        console.log(
+          `%c[WORKER ${workerIndex}] START (${chunksForThisWorker.length} chunks)`,
+          "color:#00aaff"
+        );
 
-        // 4) Sorok megállapítása
-        setSteps((s) => ({
-          ...s,
-          rowsExtracted: true,
-          rowsExtractedTime: performance.now(),
-          rowsTotal: rows.length,
-        }));
+        for (let ci = 0; ci < chunksForThisWorker.length; ci++) {
+          if (!active || cancelledRef.current) {
+            console.log(
+              `%c[WORKER ${workerIndex}] CANCELLED`,
+              "color:red"
+            );
+            return;
+          }
 
-        // 5) Batch feldolgozás
-        const batchResponse = await fetch(`${API}/ai/validate-batch`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            headers: normalizedHeaders,
-            rows: rows,
-          }),
-        }).then((r) => r.json());
+          const chunk = chunksForThisWorker[ci];
+          console.log(
+            `%c[WORKER ${workerIndex}] Processing chunk ${ci} (size=${chunk.length})`,
+            "color:#00aaff"
+          );
 
-        // 6) Kész
-        setSteps((s) => ({
-          ...s,
-          done: true,
-          doneTime: performance.now(),
-        }));
+          // --- BE --- //
+          currentOpRef.current += 1;
+          setProgress((currentOpRef.current / totalOpsRef.current) * 100);
+          console.log(
+            `%c[PROGRESS] BE → ${(
+              (currentOpRef.current / totalOpsRef.current) *
+              100
+            ).toFixed(2)}%`,
+            "color:#33cc33"
+          );
 
-        onComplete(batchResponse);
-      } catch (err) {
-        console.error(err);
-        setError("Hiba történt a feldolgozás során.");
+          const result = await processBatch(chunk, headers, types);
+
+          // --- KI --- //
+          currentOpRef.current += 1;
+          setProgress((currentOpRef.current / totalOpsRef.current) * 100);
+          console.log(
+            `%c[PROGRESS] KI → ${(
+              (currentOpRef.current / totalOpsRef.current) *
+              100
+            ).toFixed(2)}%`,
+            "color:#33cc33"
+          );
+
+          processedRef.current.push(...result);
+
+          console.log(
+            `%c[WORKER ${workerIndex}] Chunk ${ci} DONE`,
+            "color:#00cc88"
+          );
+        }
+
+        console.log(
+          `%c[WORKER ${workerIndex}] ALL CHUNKS DONE`,
+          "color:#00cc88"
+        );
+      }
+
+      const workers = workerChunks.map((c, i) => worker(c, i));
+      console.log(
+        "%c[RUN] Workers started: " + workers.length,
+        "color:#ffaa00"
+      );
+
+      await Promise.all(workers);
+
+      if (active && !cancelledRef.current) {
+        const end = Date.now();
+        setEndTime(end);
+        setDone(true);
+
+        console.log(
+          `%c[RUN] COMPLETE. Duration = ${
+            (end - startTimeRef.current!) / 1000
+          }s`,
+          "color:#00cc88"
+        );
+
+        onComplete({
+          headers,
+          rows: processedRef.current,
+          duration: (end - startTimeRef.current!) / 1000,
+        });
       }
     }
 
-    process();
+    run();
 
     return () => {
-      es.close();
+      console.log("%c[ProcessingView] CLEANUP", "color:#ffaa00");
+      active = false;
+      cancelledRef.current = true;
     };
-  }, []);
+  }, [rows, headers, types, onComplete]);
 
-  // idő formázó
-  const fmt = (t: number | null, base: number | null) =>
-    t && base ? ((t - base) / 1000).toFixed(2) + "s" : null;
+  const duration =
+    startTimeRef.current && endTime
+      ? ((endTime - startTimeRef.current) / 1000).toFixed(2)
+      : null;
 
   return (
     <div className="p-6 space-y-6">
-      <h2 className="text-xl font-semibold">Feldolgozás folyamatban…</h2>
+      <div className="flex justify-between items-center">
+        <Button variant="outline" onClick={onBack}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Vissza
+        </Button>
 
-      {error && (
-        <div className="p-3 bg-red-500/20 text-red-700 rounded">{error}</div>
-      )}
-
-      <div className="space-y-4">
-        <StepItem
-          label="Fájl fogadva"
-          done={steps.fileReceived}
-          time={fmt(steps.fileReceivedTime, steps.fileReceivedTime)}
-        />
-
-        <StepItem
-          label="Fájl ellenőrzése"
-          done={steps.fileValidated}
-          time={fmt(steps.fileValidatedTime, steps.fileReceivedTime)}
-        />
-
-        <StepItem
-          label="Fejlécek normalizálása"
-          done={steps.headersNormalized}
-          time={fmt(steps.headersNormalizedTime, steps.fileValidatedTime)}
-        />
-
-        <StepItem
-          label="Sorok megállapítása"
-          done={steps.rowsExtracted}
-          time={fmt(steps.rowsExtractedTime, steps.headersNormalizedTime)}
-        />
-
-        <div>
-          <StepItem
-            label={`Sorok feldolgozása (${steps.rowsProcessing}/${steps.rowsTotal})`}
-            done={steps.done}
-            time={
-              steps.rowsProcessingEnd && steps.rowsProcessingStart
-                ? fmt(steps.rowsProcessingEnd, steps.rowsProcessingStart)
-                : null
-            }
-          />
-
-          {!steps.done && steps.rowsTotal > 0 && (
-            <div className="w-full bg-muted h-2 rounded mt-2">
-              <div
-                className="bg-primary h-2 rounded transition-all"
-                style={{
-                  width: `${(steps.rowsProcessing / steps.rowsTotal) * 100}%`,
-                }}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StepItem({
-  label,
-  done,
-  time,
-}: {
-  label: string;
-  done: boolean;
-  time?: string | null;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        className={`w-4 h-4 rounded-full border transition-all ${
-          done
-            ? "bg-green-500 border-green-600"
-            : "bg-muted border-muted-foreground"
-        }`}
-      />
-      <span className="text-sm">
-        {label}
-        {done && time && (
-          <span className="text-xs text-muted-foreground ml-2">({time})</span>
+        {!done && (
+          <Button
+            variant="destructive"
+            onClick={() => {
+              console.log("%c[RUN] CANCEL REQUESTED", "color:red");
+              cancelledRef.current = true;
+            }}
+          >
+            Megszakítás
+          </Button>
         )}
-      </span>
+      </div>
+
+      <div className="flex flex-col items-center gap-4 mt-6">
+        <Progress value={progress} className="w-full" />
+
+        {!done && !cancelledRef.current && (
+          <p className="text-sm text-muted-foreground">
+            {Math.round(progress)}% kész
+          </p>
+        )}
+
+        {cancelledRef.current && (
+          <p className="text-red-600 font-medium">Feldolgozás megszakítva.</p>
+        )}
+
+        {done && (
+          <>
+            <p className="text-green-600 font-medium">Feldolgozás kész!</p>
+            {duration && (
+              <p className="text-sm text-muted-foreground">
+                Feldolgozási idő: {duration} másodperc
+              </p>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

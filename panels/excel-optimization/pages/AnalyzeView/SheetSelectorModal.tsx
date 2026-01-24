@@ -3,14 +3,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
 } from "@packages/ui/dialog";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
-  SelectItem
+  SelectItem,
 } from "@packages/ui/select";
 import { Button } from "@packages/ui/button";
 
@@ -27,7 +27,7 @@ export default function SheetSelectorModal({
   sheets,
   selectedSheet,
   onSelect,
-  onClose
+  onClose,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -36,7 +36,13 @@ export default function SheetSelectorModal({
           <DialogTitle>Válassz sheetet</DialogTitle>
         </DialogHeader>
 
-        <Select value={selectedSheet || ""} onValueChange={onSelect}>
+        <Select
+          value={selectedSheet || ""}
+          onValueChange={(value) => {
+            onSelect(value);
+            onClose();
+          }}
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Sheet kiválasztása" />
           </SelectTrigger>
@@ -50,10 +56,7 @@ export default function SheetSelectorModal({
           </SelectContent>
         </Select>
 
-        <DialogFooter>
-          <Button disabled={!selectedSheet} onClick={onClose}>
-            Folytatás
-          </Button>
+        <DialogFooter>          
         </DialogFooter>
       </DialogContent>
     </Dialog>

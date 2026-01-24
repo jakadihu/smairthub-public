@@ -5,7 +5,7 @@ import SheetSelectorModal from "./SheetSelectorModal";
 import ColumnEditor from "./ColumnEditor";
 import PreviewTable from "./PreviewTable";
 import { Button } from "@packages/ui/button";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { detectHeader } from "../../logic/detectHeader";
 
 interface AnalyzeViewProps {
@@ -18,6 +18,30 @@ type SheetData = {
   rowCount: number;
 };
 
+// -------------------------------------------------------
+//  NORMALIZÁLÓ FUNKCIÓK
+// -------------------------------------------------------
+
+function toStringMatrix(rawMatrix: any[][]): string[][] {
+  return rawMatrix.map((row) =>
+    row.map((cell) =>
+      cell === null || cell === undefined ? "" : String(cell),
+    ),
+  );
+}
+
+function normalizeColumns(matrix: string[][]): string[][] {
+  const maxCols = Math.max(...matrix.map((row) => row.length || 0));
+  return matrix.map((row) => {
+    const newRow = [...row];
+    while (newRow.length < maxCols) newRow.push("");
+    return newRow;
+  });
+}
+
+// -------------------------------------------------------
+//  KOMPONENS
+// -------------------------------------------------------
 
 export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
   const API = process.env.NEXT_PUBLIC_API_URL;
@@ -34,6 +58,17 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
   const [processed, setProcessed] = useState<any | null>(null);
 
   const [processing, setProcessing] = useState(false);
+
+  const steps = [
+    "Fájl betöltése…",
+    "Sheet kiválasztása…",
+    "Adatok normalizálása…",
+    "Fejlécek detektálása…",
+    "Sorok feldolgozása…",
+    "Előkészítés befejezve…",
+  ];
+
+  const [currentStep, setCurrentStep] = useState(steps[0]);
 
   // -------------------------------------------------------
   // 1) INSPECT
@@ -61,7 +96,6 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
             setShowSheetModal(true);
           }
         } else {
-          // CSV esetén nincs sheet
           setSelectedSheet(null);
         }
       } catch (e) {
@@ -73,20 +107,16 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
     }
 
     run();
-  }, [file]);
+  }, [file, API]);
 
   // -------------------------------------------------------
-  // 2) PROCESS (CSV és XLSX külön kezelve)
+  // 2) PROCESS — DEADLOCK-MENTES VERZIÓ
   // -------------------------------------------------------
   useEffect(() => {
     async function processFile() {
       if (!analysis) return;
-
-      // XLSX esetén sheet kell
       if (analysis.type === "xlsx" && !selectedSheet) return;
 
-      // Strict Mode duplafuttatás ellen
-      if (processing) return;
       setProcessing(true);
 
       try {
@@ -102,15 +132,21 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
 
         const json = await res.json();
 
-        let rawMatrix = null;
-        if (json.type === "xlsx") {
+        let rawMatrix: any[][] | null = null;
+
+        if (["xlsx", "xls"].includes(json.type)) {
           const sheets = json.sheets as Record<string, SheetData>;
 
-          const sheetEntry = Object.entries(sheets).find(
-            ([key]) => key.trim() === selectedSheet?.trim(),
-          );
+          function normalizeName(name: string) {
+            return name.toLowerCase().replace(/\s+/g, "");
+          }
 
-          rawMatrix = sheetEntry?.[1]?.raw ?? null;
+          const sheetEntry = Object.entries(sheets).find(([key]) => {
+            return normalizeName(key) === normalizeName(selectedSheet || "");
+          });
+
+          const finalSheet = sheetEntry?.[1] ?? Object.values(sheets)[0];
+          rawMatrix = finalSheet?.raw ?? null;
         } else {
           rawMatrix = json.raw ?? null;
         }
@@ -125,24 +161,17 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
           return;
         }
 
-        // 1) Mintavétel
-        const sample = rawMatrix.slice(0, 10);
+        // 1) Stringesítés
+        const stringMatrix = toStringMatrix(rawMatrix);
 
-        // 2) Normalizálás AI-hoz
-        const normalized = sample.map((row) =>
-          row.map((cell: any) =>
-            cell === null || cell === undefined ? "" : String(cell),
-          ),
-        );
+        // 2) Oszlopszám-normalizálás
+        const fullNormalized = normalizeColumns(stringMatrix);
 
-        const headerInfo = await detectHeader(normalized);
+        // 3) Sample a fejlécdetektáláshoz
+        const sample = fullNormalized.slice(0, 10);
 
-        // 3) Teljes normalizálás
-        const fullNormalized = rawMatrix.map((row) =>
-          row.map((cell: any) =>
-            cell === null || cell === undefined ? "" : String(cell),
-          ),
-        );
+        // 4) Fejléc detektálás
+        const headerInfo = await detectHeader(sample);
 
         const startIndex =
           headerInfo.dataStartIndex !== undefined
@@ -151,15 +180,27 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
               ? 1
               : 0;
 
-        const rows = fullNormalized.slice(startIndex);
+        const dataRows = fullNormalized.slice(startIndex);
 
-        setHeaders(headerInfo.headers ?? []);
-        setTypes(headerInfo.types ?? []);
+        const headerList = headerInfo.headers ?? [];
+        const typeList = headerInfo.types ?? [];
 
-        // Átalakítás objektumokká
-        const objectRows = rows.map((rowArr) => {
+        setHeaders(headerList);
+        setTypes(typeList);
+
+        // 5) Sorok objektummá alakítása
+        const headerLength = headerList.length;
+
+        const normalizedRows = dataRows.map((row) => {
+          const newRow = [...row];
+          while (newRow.length < headerLength) newRow.push("");
+          return newRow;
+        });
+       
+
+        const objectRows = normalizedRows.map((rowArr) => {
           const obj: any = {};
-          (headerInfo.headers ?? []).forEach((h, i) => {
+          headerList.forEach((h, i) => {
             obj[h] = rowArr[i] ?? "";
           });
           return obj;
@@ -167,30 +208,51 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
 
         setProcessed({
           raw: fullNormalized,
-          headers: headerInfo.headers,
+          headers: headerList,
           rows: objectRows,
         });
+      } catch (e) {
+        console.error(e);
+        setError("Nem sikerült feldolgozni a fájlt.");
       } finally {
         setProcessing(false);
       }
     }
 
     processFile();
-  }, [analysis, selectedSheet]);
+  }, [analysis, selectedSheet, file, API]); // ❗ processing NINCS ITT
+
+  // -------------------------------------------------------
+  // PROGRESS UI
+  // -------------------------------------------------------
+  useEffect(() => {
+    if (!processing) {
+      setCurrentStep(steps[steps.length - 1]);
+      return;
+    }
+
+    let i = 0;
+    setCurrentStep(steps[0]);
+
+    const interval = setInterval(() => {
+      i++;
+      if (i < steps.length) {
+        setCurrentStep(steps[i]);
+      }
+    }, 700);
+
+    return () => clearInterval(interval);
+  }, [processing, steps]);
 
   // -------------------------------------------------------
   // RENDER
-  // -------------------------------------------------------
+  // -------------------------------------------------------  
 
   if (loading || processing) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-      <lottie-player src="https://lottie.host/6340573a-1db3-412d-948e-78884c89a393/t5rGgNhyMO.json" background="transparent" speed="1" style={{ width: "200px", height: "200px" }} loop autoplay ></lottie-player>
-
-      <p className="text-sm text-muted-foreground">
-        Feldolgozás folyamatban…
-      </p>
-    </div>
+        <p className="text-sm text-muted-foreground">{currentStep}</p>
+      </div>
     );
   }
 
@@ -208,9 +270,34 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
     onConfigured(config, processed);
   }
 
+  function formatBytes(bytes: number) {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Fájl elemzése</h2>
+
+      <div className="rounded-sm border p-4 bg-muted/30 text-sm space-y-1">
+        <div>
+          <strong>Fájlnév:</strong> {file.name}
+        </div>
+        <div>
+          <strong>Típus:</strong> {analysis.type.toUpperCase()}
+        </div>
+        <div>
+          <strong>Méret:</strong> {formatBytes(file.size)}
+        </div>
+        {processed?.raw && (
+          <div>
+            <strong>Sorok száma:</strong> {processed.raw.length}
+          </div>
+        )}
+      </div>
 
       {analysis.type === "xlsx" && Array.isArray(analysis.sheets) && (
         <SheetSelectorModal
@@ -235,8 +322,16 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
         <PreviewTable headers={headers} rows={processed.rows} />
       )}
 
-      <div className="flex justify-end">
-        <Button onClick={handleContinue}>Tovább a feldolgozásra</Button>
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Vissza
+        </Button>
+
+        <Button onClick={handleContinue}>
+          Fájl feldolgozása
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
       </div>
     </div>
   );

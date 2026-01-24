@@ -16,8 +16,9 @@ export default function ExcelOptimizationRootPage({
 }) {
   const t = useI18n(locale);
 
-  const [step, setStep] =
-    useState<"upload" | "analyze" | "processing" | "done">("upload");
+  const [step, setStep] = useState<
+    "upload" | "analyze" | "processing" | "done"
+  >("upload");
 
   const [file, setFile] = useState<File | null>(null);
   const [isValid, setIsValid] = useState(false);
@@ -73,10 +74,12 @@ export default function ExcelOptimizationRootPage({
       )}
 
       {/* 3) FELDOLGOZÁS (SSE, progress, cancel) */}
-      {step === "processing" && config && (
+      {step === "processing" && config && analysis && (
         <ProcessingView
-          config={config}
-          analysis={analysis}
+          headers={config.headers}
+          types={config.types}
+          rows={analysis.rows}
+          onBack={() => setStep("analyze")}
           onComplete={(result) => {
             setResult(result);
             setStep("done");
@@ -85,9 +88,7 @@ export default function ExcelOptimizationRootPage({
       )}
 
       {/* 4) EREDMÉNYEK */}
-      {step === "done" && result && (
-        <ResultsView result={result} t={t} />
-      )}
+      {step === "done" && result && <ResultsView result={result} t={t} />}
     </div>
   );
 }

@@ -6,31 +6,22 @@ const client = new OpenAI({
 });
 
 export async function callModel(prompt) {
-  const response = await client.responses.create({
+  const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
-    input: prompt,
+    response_format: { type: "json_object" },
+    temperature: 0,
+    max_tokens: 2048,
+    messages: [
+      { role: "user", content: prompt }
+    ]
   });
 
-  // 1) Ha van output_text → ezt használjuk
-  if (response.output_text) {
-    return response.output_text;
-  }
-
-  // 2) Ha nincs, akkor a strukturált outputból szedjük ki
-  let text =
-    response.output?.[0]?.content?.[0]?.text ??
-    response.output?.[0]?.content?.[0]?.output_text;
+  const text = response.choices?.[0]?.message?.content;
 
   if (!text) {
-    console.error("Unexpected AI response format:", response);
-    throw new Error("AI response missing text");
+    console.error("AI returned no content:", response);
+    throw new Error("AI response missing content");
   }
 
-  // 3) Biztonsági tisztítás: ha code blockot ad vissza
-  text = text
-    .replace(/```json/gi, "")
-    .replace(/```/g, "")
-    .trim();
-
-  return text;
+  return text.trim();
 }

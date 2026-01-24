@@ -6,7 +6,7 @@ export interface HeaderDetectionResult {
   hasHeader: boolean;
   headerRowIndex: number;
   headers: string[];
-  types?: string[];
+  types: string[];
   dataStartIndex: number;
 }
 
@@ -14,26 +14,38 @@ export async function detectHeader(sample: string[][]): Promise<HeaderDetectionR
   const prompt = buildHeaderDetectPrompt(sample);
   const raw = await callAI(prompt);
 
+  let parsed: any;
+
   try {
-    const parsed = JSON.parse(raw);
-
-    if (typeof parsed !== "object") {
-      throw new Error("AI response is not an object");
-    }
-
-    if (!Array.isArray(parsed.headers)) {
-      throw new Error("Missing or invalid 'headers' field");
-    }
-
-    return {
-      hasHeader: Boolean(parsed.hasHeader),
-      headerRowIndex: parsed.headerRowIndex ?? 0,
-      headers: parsed.headers,
-      types: parsed.types || [],
-      dataStartIndex: parsed.dataStartIndex ?? (parsed.hasHeader ? 1 : 0),
-    };
+    parsed = JSON.parse(raw);
   } catch (err) {
     console.error("detectHeader JSON parse error:", err, "raw:", raw);
     throw new Error("AI returned invalid JSON for header detection");
   }
+
+  // --- VALIDÁCIÓ ---
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("AI response is not an object");
+  }
+
+  if (!Array.isArray(parsed.headers)) {
+    throw new Error("Missing or invalid 'headers' field");
+  }
+
+  if (parsed.headers.length === 0) {
+    throw new Error("AI returned empty headers array");
+  }
+
+  // --- VÉGSŐ, TISZTA OUTPUT ---
+  return {
+    hasHeader: Boolean(parsed.hasHeader),
+    headerRowIndex: Number(parsed.headerRowIndex ?? 0),
+    headers: parsed.headers.map((h: any) => (h == null ? "" : String(h))),
+    types: Array.isArray(parsed.types)
+      ? parsed.types.map((t: any) => String(t))
+      : [],
+    dataStartIndex:
+      parsed.dataStartIndex ??
+      (parsed.hasHeader ? Number(parsed.headerRowIndex ?? 0) + 1 : 0),
+  };
 }

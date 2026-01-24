@@ -1,5 +1,7 @@
 // utils/fileHandlers/csvHandler.js
 import { parse } from "csv-parse/sync";
+import chardet from "chardet";
+import iconv from "iconv-lite";
 
 // Automatikus delimiter felismerés
 function detectDelimiter(sample) {
@@ -16,8 +18,23 @@ function detectDelimiter(sample) {
     scores[d] = count;
   }
 
-  // Legmagasabb előfordulás
   return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+// 🔥 Központi dekódoló – minden CSV itt megy át
+function decodeCsvBuffer(buffer) {
+  // 1) Kódolás felismerése
+  const detected = chardet.detect(buffer) || "utf-8";
+
+  // 2) Dekódolás
+  let text = iconv.decode(buffer, detected);
+
+  // 3) BOM eltávolítása
+  if (text.charCodeAt(0) === 0xFEFF) {
+    text = text.slice(1);
+  }
+
+  return text;
 }
 
 export const handleCsv = {
@@ -26,12 +43,14 @@ export const handleCsv = {
     const mime = file.mimetype;
 
     return (
-      mime === "text/csv" || mime === "application/csv" || name.endsWith(".csv")
+      mime === "text/csv" ||
+      mime === "application/csv" ||
+      name.endsWith(".csv")
     );
   },
 
   inspect(file) {
-    const text = file.buffer.toString("utf-8");
+    const text = decodeCsvBuffer(file.buffer);
 
     const delimiter = detectDelimiter(text);
     const hasQuotes = text.includes('"');
@@ -42,12 +61,11 @@ export const handleCsv = {
       columns: false,
       skip_empty_lines: true,
       trim: true,
-      to_line: 5, // több sor preview
+      to_line: 5,
       relax_column_count: true,
       relax_column_count_less: true,
       relax_column_count_more: true,
       relax_quotes: true,
-      skip_empty_lines: true      
     });
 
     return {
@@ -63,12 +81,11 @@ export const handleCsv = {
   },
 
   process(file, options = {}) {
-    const text = file.buffer.toString("utf-8");
+    const text = decodeCsvBuffer(file.buffer);
 
     const delimiter = detectDelimiter(text);
     const hasQuotes = text.includes('"');
 
-    // Mindig mátrixot adunk vissza
     const rows = parse(text, {
       delimiter,
       quote: hasQuotes ? '"' : null,
@@ -78,7 +95,7 @@ export const handleCsv = {
       relax_column_count: true,
       relax_column_count_less: true,
       relax_column_count_more: true,
-      relax_quotes: true,      
+      relax_quotes: true,
     });
 
     return {

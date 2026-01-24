@@ -1,6 +1,10 @@
-// utils/fileHandlers/xlsxHandler.js
-import { raw } from "express";
 import * as XLSX from "xlsx";
+import iconv from "iconv-lite";
+
+function fixEncoding(value) {
+  if (typeof value !== "string") return value;
+  return iconv.decode(Buffer.from(value, "binary"), "cp1250");
+}
 
 export const handleXlsx = {
   canHandle(file) {
@@ -15,7 +19,7 @@ export const handleXlsx = {
       mime === "application/octet-stream"
     );
   },
-  // 1) METAADAT – a panel ebből tudja, mit kérhet
+
   inspect(file) {
     const workbook = XLSX.read(file.buffer, { type: "buffer" });
 
@@ -30,9 +34,10 @@ export const handleXlsx = {
     };
   },
 
-  // 2) ADAT – a panel mondja meg, mit akar
   process(file, options = {}) {
     const workbook = XLSX.read(file.buffer, { type: "buffer" });
+
+    const isXls = file.originalname.toLowerCase().endsWith(".xls");
 
     const sheetsToProcess = options.sheet
       ? Array.isArray(options.sheet)
@@ -46,7 +51,15 @@ export const handleXlsx = {
       const sheet = workbook.Sheets[sheetName];
       if (!sheet) continue;
 
-      // Mindig mátrixot adunk vissza
+      // CP1250 → UTF-8 fix ONLY for .xls
+      if (isXls) {
+        for (const cell in sheet) {
+          if (cell[0] === "!") continue;
+          sheet[cell].v = fixEncoding(sheet[cell].v);
+          sheet[cell].w = fixEncoding(sheet[cell].w);
+        }
+      }
+
       const matrix = XLSX.utils.sheet_to_json(sheet, {
         header: 1,
         defval: "",

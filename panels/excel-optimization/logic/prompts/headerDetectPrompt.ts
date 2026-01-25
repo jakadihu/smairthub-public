@@ -36,7 +36,8 @@ RETURN JSON EXACTLY in this format:
 Additional Rules:
 - If the first row looks like column names, set hasHeader=true and headerRowIndex=0.
 - If another row is the header, set headerRowIndex accordingly.
-- If no header exists, set hasHeader=false and generate generic headers like ["col_1", "col_2", ...] BUT the number of generated headers MUST match the number of columns EXACTLY.
+- If no header exists, set hasHeader=false and you MUST generate meaningful, human-friendly header names for every column based on the content of that column. Do not leave any header empty.
+- The number of generated headers MUST match the number of columns EXACTLY.
 - Infer basic types: string, number, boolean, date.
 - dataStartIndex = headerRowIndex + 1 if hasHeader, otherwise 0.
 `;

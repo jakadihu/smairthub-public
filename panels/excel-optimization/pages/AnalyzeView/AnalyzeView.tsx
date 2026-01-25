@@ -5,8 +5,19 @@ import SheetSelectorModal from "./SheetSelectorModal";
 import ColumnEditor from "./ColumnEditor";
 import PreviewTable from "./PreviewTable";
 import { Button } from "@packages/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  FileSpreadsheet,
+  FileTypeCorner,
+  Weight,
+  ListCheck,
+  Clock,
+} from "lucide-react";
 import { detectHeader } from "../../logic/detectHeader";
+import ProgressStepper from "./ProgressStepper";
+import { Card, CardContent, CardHeader, CardTitle } from "@packages/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@packages/ui/tooltip";
 
 interface AnalyzeViewProps {
   file: File;
@@ -59,6 +70,8 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
 
   const [processing, setProcessing] = useState(false);
 
+  const [pipelineRunning, setPipelineRunning] = useState(true);
+
   const steps = [
     "Fájl betöltése…",
     "Sheet kiválasztása…",
@@ -75,7 +88,10 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
   // -------------------------------------------------------
   useEffect(() => {
     async function run() {
+      setPipelineRunning(true);
       try {
+        setCurrentStep("Fájl betöltése…");
+
         const form = new FormData();
         form.append("file", file);
 
@@ -88,6 +104,8 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
 
         const meta = await res.json();
         setAnalysis(meta);
+
+        setCurrentStep("Sheet kiválasztása…");
 
         if (meta.type === "xlsx") {
           if (meta.sheets.length === 1) {
@@ -120,6 +138,8 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
       setProcessing(true);
 
       try {
+        setCurrentStep("Adatok normalizálása…");
+
         const form = new FormData();
         form.append("file", file);
         if (selectedSheet) form.append("sheet", selectedSheet);
@@ -168,6 +188,7 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
         const fullNormalized = normalizeColumns(stringMatrix);
 
         // 3) Sample a fejlécdetektáláshoz
+        setCurrentStep("Fejlécek detektálása…");
         const sample = fullNormalized.slice(0, 10);
 
         // 4) Fejléc detektálás
@@ -189,6 +210,7 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
         setTypes(typeList);
 
         // 5) Sorok objektummá alakítása
+        setCurrentStep("Sorok feldolgozása…");
         const headerLength = headerList.length;
 
         const normalizedRows = dataRows.map((row) => {
@@ -196,7 +218,6 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
           while (newRow.length < headerLength) newRow.push("");
           return newRow;
         });
-       
 
         const objectRows = normalizedRows.map((rowArr) => {
           const obj: any = {};
@@ -211,48 +232,47 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
           headers: headerList,
           rows: objectRows,
         });
+
+        setCurrentStep("Előkészítés befejezve…");
       } catch (e) {
         console.error(e);
         setError("Nem sikerült feldolgozni a fájlt.");
       } finally {
-        setProcessing(false);
+        setTimeout(() => {
+          setProcessing(false);
+          setPipelineRunning(false);
+        }, 700);
       }
     }
 
     processFile();
-  }, [analysis, selectedSheet, file, API]); // ❗ processing NINCS ITT
-
-  // -------------------------------------------------------
-  // PROGRESS UI
-  // -------------------------------------------------------
-  useEffect(() => {
-    if (!processing) {
-      setCurrentStep(steps[steps.length - 1]);
-      return;
-    }
-
-    let i = 0;
-    setCurrentStep(steps[0]);
-
-    const interval = setInterval(() => {
-      i++;
-      if (i < steps.length) {
-        setCurrentStep(steps[i]);
-      }
-    }, 700);
-
-    return () => clearInterval(interval);
-  }, [processing, steps]);
+  }, [analysis, selectedSheet, file, API]);
 
   // -------------------------------------------------------
   // RENDER
-  // -------------------------------------------------------  
+  // -------------------------------------------------------
 
-  if (loading || processing) {
+  const currentIndex = steps.indexOf(currentStep);
+
+  const shouldShowStepper = loading || processing || pipelineRunning;
+
+  if (shouldShowStepper) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <p className="text-sm text-muted-foreground">{currentStep}</p>
-      </div>
+      <>
+        <div className="flex items-center justify-center h-[60vh]">
+          <ProgressStepper steps={steps} currentIndex={currentIndex} />
+        </div>
+
+        {analysis?.type === "xlsx" && Array.isArray(analysis.sheets) && (
+          <SheetSelectorModal
+            open={showSheetModal}
+            sheets={analysis.sheets}
+            selectedSheet={selectedSheet}
+            onSelect={setSelectedSheet}
+            onClose={() => setShowSheetModal(false)}
+          />
+        )}
+      </>
     );
   }
 
@@ -280,34 +300,56 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Fájl elemzése</h2>
-
-      <div className="rounded-sm border p-4 bg-muted/30 text-sm space-y-1">
-        <div>
-          <strong>Fájlnév:</strong> {file.name}
-        </div>
-        <div>
-          <strong>Típus:</strong> {analysis.type.toUpperCase()}
-        </div>
-        <div>
-          <strong>Méret:</strong> {formatBytes(file.size)}
-        </div>
-        {processed?.raw && (
-          <div>
-            <strong>Sorok száma:</strong> {processed.raw.length}
+      <Card size="sm">
+        <CardHeader>
+          <CardTitle>Fájl információk</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <FileSpreadsheet /> {file.name}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Fájlnév</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <FileTypeCorner /> {analysis.type.toUpperCase()}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Fájltípus</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Weight /> {formatBytes(file.size)}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Fájlméret</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <ListCheck /> {processed?.raw.length}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Sorok száma</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Clock /> ?
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Várható feldolgozási idő</TooltipContent>
+            </Tooltip>
           </div>
-        )}
-      </div>
-
-      {analysis.type === "xlsx" && Array.isArray(analysis.sheets) && (
-        <SheetSelectorModal
-          open={showSheetModal}
-          sheets={analysis.sheets}
-          selectedSheet={selectedSheet}
-          onSelect={setSelectedSheet}
-          onClose={() => setShowSheetModal(false)}
-        />
-      )}
+        </CardContent>
+      </Card>
+      
 
       {headers.length > 0 && (
         <ColumnEditor

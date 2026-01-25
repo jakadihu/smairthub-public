@@ -1,44 +1,83 @@
-// logic/prompts/headerDetectPrompt.ts
-
-export function buildHeaderDetectPrompt(sample: string[][]): string {
+export function buildHeaderDetectPrompt(
+  sample: string[][],
+  locale: string,
+): string {
   return `
-You are an expert in analyzing tabular data.
+You are the SMAIRTHUB Header Detector.
 
-CRITICAL STRUCTURE RULES (FOLLOW EXACTLY):
-- You MUST NOT add, remove, merge, reorder, rename, infer, or ignore ANY columns.
-- The number of columns in the output "headers" MUST be EXACTLY the same as the number of columns in the input sample's longest row.
-- You MUST NOT generate extra header cells.
+LOCALE:
+The user's locale is: "${locale}".
+You MUST generate human-friendly header names in this locale.
+Examples:
+- locale="en" → "Name", "Email", "Phone", "Date", "Amount"
+- locale="hu" → "Név", "E-mail", "Telefonszám", "Dátum", "Összeg"
+- locale="de" → "Name", "E-Mail", "Telefon", "Datum", "Betrag"
+
+YOUR TASK:
+Analyze the tabular sample and determine:
+- whether the file contains a header row,
+- which row is the header,
+- what the cleaned header names should be,
+- and generate locale-appropriate human-friendly names when needed.
+
+STRUCTURE RULES (STRICT):
+- You MUST NOT add, remove, merge, reorder, or shift ANY columns.
+- The number of headers MUST match EXACTLY the number of columns in the longest row.
 - You MUST NOT drop empty columns.
-- You MUST NOT compress or shift columns.
 - You MUST NOT modify the structure of the sample in any way.
-- If a column header is empty, missing, or blank, you MUST generate a meaningful, human-friendly header name based on the content of that column. Do not leave it empty.
 
-TASK:
-Determine whether the first row of the table is a header row WITHOUT altering the structure.
+HEADER LOGIC:
 
-INPUT SAMPLE (first 10 rows):
-${JSON.stringify(sample, null, 2)}
+1) IF A HEADER EXISTS:
+- Keep the original header text.
+- Clean it:
+  - remove invisible characters (BOM, zero-width spaces),
+  - trim whitespace,
+  - collapse multiple spaces,
+  - remove trailing punctuation like ":" or "-".
+- If a header cell is empty, blank, or becomes empty after cleaning:
+  → You MUST generate a human-friendly name in the user's locale.
+- You MUST NOT leave any header empty.
 
-IMPORTANT:
-You MUST respond with VALID JSON ONLY.
-Do NOT include explanations, comments, or text before or after the JSON.
-Do NOT wrap the JSON in backticks.
+2) IF NO HEADER EXISTS:
+- hasHeader = false
+- headerRowIndex = null
+- You MUST generate human-friendly names for ALL columns in the user's locale.
+- Use column content to choose names like:
+  - (en) "Date", "Email", "Phone", "Amount", "Name"
+  - (hu) "Dátum", "E-mail", "Telefonszám", "Összeg", "Név"
+  - (de) "Datum", "E-Mail", "Telefon", "Betrag", "Name"
+- If the content is unclear → use localized generic names:
+  - (en) "Column 1", "Column 2"
+  - (hu) "Oszlop 1", "Oszlop 2"
+  - (de) "Spalte 1", "Spalte 2"
 
-RETURN JSON EXACTLY in this format:
+TYPE INFERENCE:
+Types MUST be inferred ONLY from sample values.
+Allowed types:
+- "string"
+- "number"
+- "boolean"
+- "date"
+- "email"
+- "phone"
+
+OUTPUT FORMAT (STRICT):
+Return ONLY valid JSON in this exact structure:
+
 {
   "hasHeader": boolean,
-  "headerRowIndex": number,
+  "headerRowIndex": number | null,
   "headers": string[],
   "types": string[],
   "dataStartIndex": number
 }
 
-Additional Rules:
-- If the first row looks like column names, set hasHeader=true and headerRowIndex=0.
-- If another row is the header, set headerRowIndex accordingly.
-- If no header exists, set hasHeader=false and you MUST generate meaningful, human-friendly header names for every column based on the content of that column. Do not leave any header empty.
-- The number of generated headers MUST match the number of columns EXACTLY.
-- Infer basic types: string, number, boolean, date.
-- dataStartIndex = headerRowIndex + 1 if hasHeader, otherwise 0.
+dataStartIndex = headerRowIndex + 1 if hasHeader, otherwise 0.
+
+INPUT SAMPLE (first 10 rows):
+${JSON.stringify(sample, null, 2)}
+
+Return ONLY the JSON. No explanations.
 `;
 }

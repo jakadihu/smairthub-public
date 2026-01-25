@@ -65,6 +65,7 @@ export default function ExcelOptimizationRootPage({
       {step === "analyze" && file && (
         <AnalyzeView
           file={file}
+          locale={locale}
           onConfigured={(config, analysis) => {
             setConfig(config);
             setAnalysis(analysis);

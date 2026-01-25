@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "../useI18n";
+import { AlertTriangle, XCircle, CheckCircle } from "lucide-react";
 
 export default function ResultsView({
   result,
@@ -17,18 +18,25 @@ export default function ResultsView({
     );
   }
 
-  const { headers, rows, summary } = result;
+  const { headers, rows } = result;
 
   const headerLabels = Array.isArray(headers)
     ? headers.map((h: any) =>
         typeof h === "string"
           ? h
-          : (h.normalized ?? h.original ?? h.key ?? "?"),
+          : (h.normalized ?? h.original ?? h.key ?? "?")
       )
     : [];
 
   const safeRows = Array.isArray(rows) ? rows : [];
 
+  function renderStatusIcon(status: string) {
+    if (status === "danger")
+      return <XCircle className="w-4 h-4 text-red-600" />;
+    if (status === "warning")
+      return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
+    return <CheckCircle className="w-4 h-4 text-green-600" />;
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -44,7 +52,7 @@ export default function ResultsView({
         </p>
       </div>
 
-      {/* EREDETI TÁBLA MEGJELENÍTÉSE */}
+      {/* EREDMÉNY TÁBLA */}
       <div className="p-4 border rounded-lg">
         <h2 className="font-medium mb-2">{t("results.rows")}</h2>
 
@@ -60,11 +68,10 @@ export default function ResultsView({
               <thead className="bg-muted">
                 <tr>
                   <th className="border px-2 py-1">#</th>
-                  <th className="border px-2 py-1">Status</th>
-                  <th className="border px-2 py-1">Hiba</th>
+                  <th className="border px-2 py-1">Státusz</th>
                   <th className="border px-2 py-1">Pont</th>
+                  <th className="border px-2 py-1">Hibák</th>
 
-                  {/* Eredeti oszlopok */}
                   {headerLabels.map((h) => (
                     <th key={h} className="border px-2 py-1">
                       {h}
@@ -75,25 +82,53 @@ export default function ResultsView({
 
               <tbody>
                 {safeRows.map((row: any, i: number) => {
-                  const isWarning = !row.success;
                   const displayIndex =
                     typeof row.index === "number" ? row.index : i;
 
+                  const issues = Object.values(row.normalized ?? {})
+                    .flatMap((cell: any) => cell.issues || []);
+
                   return (
-                    <tr key={i} className={isWarning ? "bg-yellow-100" : ""}>
+                    <tr
+                      key={i}
+                      className={
+                        row.rowStatus === "danger"
+                          ? "bg-red-50"
+                          : row.rowStatus === "warning"
+                          ? "bg-yellow-50"
+                          : ""
+                      }
+                    >
                       <td className="border px-2 py-1">{displayIndex}</td>
 
                       <td className="border px-2 py-1">
-                        {row.success ? "OK" : "HIBA"}
+                        <div className="flex items-center gap-1">
+                          {renderStatusIcon(row.rowStatus)}
+                          {row.rowStatus.toUpperCase()}
+                        </div>
                       </td>
 
                       <td className="border px-2 py-1">
-                        {row.errorMessage || ""}
+                        {(row.rowScore ?? 0).toFixed(2)}
                       </td>
 
-                      <td className="border px-2 py-1">{row.score ?? ""}</td>
+                      <td className="border px-2 py-1">
+                        {issues.length > 0
+                          ? issues.map((iss: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className={
+                                  iss.severity === "danger"
+                                    ? "text-red-600"
+                                    : "text-yellow-600"
+                                }
+                              >
+                                • {iss.type}
+                              </div>
+                            ))
+                          : "—"}
+                      </td>
 
-                      {/* Eredeti cellák */}
                       {headerLabels.map((key) => (
                         <td key={key} className="border px-2 py-1">
                           {row.original?.[key] ?? ""}

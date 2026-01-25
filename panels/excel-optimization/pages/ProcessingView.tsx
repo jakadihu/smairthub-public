@@ -10,6 +10,26 @@ import { processBatch } from "../logic/processBatch";
 const CONCURRENCY = 8;
 const BATCH_SIZE = 5;
 
+interface ProcessedRow {
+  index: number;
+  success: boolean;
+  errorMessage: string | null;
+  original: any;
+  normalized: Record<string, CellResult> | null;
+  rowScore: number;
+  rowStatus: "ok" | "warning" | "danger";
+}
+
+interface CellResult {
+  normalized: string | number | boolean | null;
+  issues: {
+    type: string;
+    severity: "warning" | "danger";
+    message: string;
+  }[];
+  score: number;
+}
+
 export default function ProcessingView({
   headers,
   types,
@@ -21,7 +41,11 @@ export default function ProcessingView({
   types: Record<string, string>;
   rows: any[];
   onBack: () => void;
-  onComplete: (result: any) => void;
+  onComplete: (result: {
+    headers: string[];
+    rows: ProcessedRow[];
+    duration: number;
+  }) => void;
 }) {
   const processedRef = useRef<any[]>([]);
   const cancelledRef = useRef(false);
@@ -58,7 +82,7 @@ export default function ProcessingView({
       // --- FIXED CHUNKING --- //
       console.log(
         `%c[CHUNK] Creating chunks with batchSize=${BATCH_SIZE}`,
-        "color:#33ccff"
+        "color:#33ccff",
       );
 
       const chunks: any[][] = [];
@@ -67,27 +91,21 @@ export default function ProcessingView({
         chunks.push(chunk);
         console.log(
           `%c[CHUNK] Created chunk ${chunks.length - 1} (size=${chunk.length})`,
-          "color:#33ccff"
+          "color:#33ccff",
         );
       }
 
       const concurrency = Math.min(CONCURRENCY, chunks.length);
-      console.log(
-        `%c[RUN] Using concurrency=${concurrency}`,
-        "color:#33ccff"
-      );
+      console.log(`%c[RUN] Using concurrency=${concurrency}`, "color:#33ccff");
 
       // progress = 2 ops per chunk (BE + KI)
       totalOpsRef.current = chunks.length * 2;
-      console.log(
-        `%c[RUN] totalOps = ${totalOpsRef.current}`,
-        "color:#ffaa00"
-      );
+      console.log(`%c[RUN] totalOps = ${totalOpsRef.current}`, "color:#ffaa00");
 
       // --- DISTRIBUTE CHUNKS --- //
       const workerChunks: any[][][] = Array.from(
         { length: concurrency },
-        () => []
+        () => [],
       );
 
       chunks.forEach((chunk, i) => {
@@ -100,22 +118,19 @@ export default function ProcessingView({
       async function worker(chunksForThisWorker: any[][], workerIndex: number) {
         console.log(
           `%c[WORKER ${workerIndex}] START (${chunksForThisWorker.length} chunks)`,
-          "color:#00aaff"
+          "color:#00aaff",
         );
 
         for (let ci = 0; ci < chunksForThisWorker.length; ci++) {
           if (!active || cancelledRef.current) {
-            console.log(
-              `%c[WORKER ${workerIndex}] CANCELLED`,
-              "color:red"
-            );
+            console.log(`%c[WORKER ${workerIndex}] CANCELLED`, "color:red");
             return;
           }
 
           const chunk = chunksForThisWorker[ci];
           console.log(
             `%c[WORKER ${workerIndex}] Processing chunk ${ci} (size=${chunk.length})`,
-            "color:#00aaff"
+            "color:#00aaff",
           );
 
           // --- BE --- //
@@ -126,7 +141,7 @@ export default function ProcessingView({
               (currentOpRef.current / totalOpsRef.current) *
               100
             ).toFixed(2)}%`,
-            "color:#33cc33"
+            "color:#33cc33",
           );
 
           const result = await processBatch(chunk, headers, types);
@@ -139,27 +154,27 @@ export default function ProcessingView({
               (currentOpRef.current / totalOpsRef.current) *
               100
             ).toFixed(2)}%`,
-            "color:#33cc33"
+            "color:#33cc33",
           );
 
           processedRef.current.push(...result);
 
           console.log(
             `%c[WORKER ${workerIndex}] Chunk ${ci} DONE`,
-            "color:#00cc88"
+            "color:#00cc88",
           );
         }
 
         console.log(
           `%c[WORKER ${workerIndex}] ALL CHUNKS DONE`,
-          "color:#00cc88"
+          "color:#00cc88",
         );
       }
 
       const workers = workerChunks.map((c, i) => worker(c, i));
       console.log(
         "%c[RUN] Workers started: " + workers.length,
-        "color:#ffaa00"
+        "color:#ffaa00",
       );
 
       await Promise.all(workers);
@@ -173,7 +188,7 @@ export default function ProcessingView({
           `%c[RUN] COMPLETE. Duration = ${
             (end - startTimeRef.current!) / 1000
           }s`,
-          "color:#00cc88"
+          "color:#00cc88",
         );
 
         onComplete({

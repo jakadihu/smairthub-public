@@ -10,8 +10,11 @@ export interface HeaderDetectionResult {
   dataStartIndex: number;
 }
 
-export async function detectHeader(sample: string[][]): Promise<HeaderDetectionResult> {
-  const prompt = buildHeaderDetectPrompt(sample);
+export async function detectHeader(
+  sample: string[][],
+  locale: string,
+): Promise<HeaderDetectionResult> {
+  const prompt = buildHeaderDetectPrompt(sample, locale);
   const raw = await callAI(prompt);
 
   let parsed: any;

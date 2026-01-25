@@ -54,7 +54,15 @@ function normalizeColumns(matrix: string[][]): string[][] {
 //  KOMPONENS
 // -------------------------------------------------------
 
-export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
+export default function AnalyzeView({
+  file,
+  locale,
+  onConfigured,
+}: {
+  file: File;
+  locale: string;
+  onConfigured: (config: any, analysis: any) => void;
+}) {
   const API = process.env.NEXT_PUBLIC_API_URL;
 
   const [loading, setLoading] = useState(true);
@@ -192,7 +200,7 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
         const sample = fullNormalized.slice(0, 10);
 
         // 4) Fejléc detektálás
-        const headerInfo = await detectHeader(sample);
+        const headerInfo = await detectHeader(sample, locale);
 
         const startIndex =
           headerInfo.dataStartIndex !== undefined
@@ -349,7 +357,6 @@ export default function AnalyzeView({ file, onConfigured }: AnalyzeViewProps) {
           </div>
         </CardContent>
       </Card>
-      
 
       {headers.length > 0 && (
         <ColumnEditor

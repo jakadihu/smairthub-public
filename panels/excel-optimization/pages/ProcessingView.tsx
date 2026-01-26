@@ -4,30 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@packages/ui/button";
 import { Progress } from "@packages/ui/progress";
 import { ArrowLeft } from "lucide-react";
-import { processBatch } from "../logic/processBatch";
-
-// --- CONFIG --- //
-const CONCURRENCY = 8;
-const BATCH_SIZE = 5;
+import { processRow } from "../logic/processRow";
 
 interface ProcessedRow {
   index: number;
   success: boolean;
   errorMessage: string | null;
   original: any;
-  normalized: Record<string, CellResult> | null;
+  normalized: Record<string, any> | null;
   rowScore: number;
   rowStatus: "ok" | "warning" | "danger";
-}
-
-interface CellResult {
-  normalized: string | number | boolean | null;
-  issues: {
-    type: string;
-    severity: "warning" | "danger";
-    message: string;
-  }[];
-  score: number;
 }
 
 export default function ProcessingView({
@@ -47,153 +33,51 @@ export default function ProcessingView({
     duration: number;
   }) => void;
 }) {
-  const processedRef = useRef<any[]>([]);
   const cancelledRef = useRef(false);
+  const startTimeRef = useRef<number | null>(null);
 
   const [progress, setProgress] = useState(0);
-  const currentOpRef = useRef(0);
-  const totalOpsRef = useRef(0);
-
   const [done, setDone] = useState(false);
-
-  const startTimeRef = useRef<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
 
   useEffect(() => {
-    console.log("%c[ProcessingView] useEffect START", "color:#ffaa00");
     let active = true;
     cancelledRef.current = false;
 
     async function run() {
-      console.log("%c[RUN] START", "color:#ffaa00");
-
-      processedRef.current = [];
-      currentOpRef.current = 0;
-      setProgress(0);
+      const total = rows.length;
+      const processed: ProcessedRow[] = [];
 
       startTimeRef.current = Date.now();
+      setProgress(0);
+      setDone(false);
       setEndTime(null);
 
-      const totalRows = rows.length;
-      console.log("%c[RUN] totalRows = " + totalRows, "color:#ffaa00");
+      for (let i = 0; i < total; i++) {
+        if (!active || cancelledRef.current) break;
 
-      if (totalRows === 0) return;
+        const row = rows[i];
 
-      // --- FIXED CHUNKING --- //
-      console.log(
-        `%c[CHUNK] Creating chunks with batchSize=${BATCH_SIZE}`,
-        "color:#33ccff",
-      );
+        // 🔍 A teljes validáció és normalizálás itt történik
+        const result = processRow(row, headers, types, i);             
 
-      const chunks: any[][] = [];
-      for (let i = 0; i < totalRows; i += BATCH_SIZE) {
-        const chunk = rows.slice(i, i + BATCH_SIZE);
-        chunks.push(chunk);
-        console.log(
-          `%c[CHUNK] Created chunk ${chunks.length - 1} (size=${chunk.length})`,
-          "color:#33ccff",
-        );
+        processed.push(result);
+
+        // 🔄 Valós progressz
+        setProgress(((i + 1) / total) * 100);
+
+        // Kis pihenő, hogy a UI frissüljön (különben túl gyors)
+        await new Promise((r) => setTimeout(r, 0));
       }
-
-      const concurrency = Math.min(CONCURRENCY, chunks.length);
-      console.log(`%c[RUN] Using concurrency=${concurrency}`, "color:#33ccff");
-
-      // progress = 2 ops per chunk (BE + KI)
-      totalOpsRef.current = chunks.length * 2;
-      console.log(`%c[RUN] totalOps = ${totalOpsRef.current}`, "color:#ffaa00");
-
-      // --- DISTRIBUTE CHUNKS --- //
-      const workerChunks: any[][][] = Array.from(
-        { length: concurrency },
-        () => [],
-      );
-
-      chunks.forEach((chunk, i) => {
-        workerChunks[i % concurrency].push(chunk);
-      });
-
-      console.log("%c[WORKERS] Distribution:", "color:#33ccff", workerChunks);
-
-      // --- WORKER --- //
-      async function worker(chunksForThisWorker: any[][], workerIndex: number) {
-        console.log(
-          `%c[WORKER ${workerIndex}] START (${chunksForThisWorker.length} chunks)`,
-          "color:#00aaff",
-        );
-
-        for (let ci = 0; ci < chunksForThisWorker.length; ci++) {
-          if (!active || cancelledRef.current) {
-            console.log(`%c[WORKER ${workerIndex}] CANCELLED`, "color:red");
-            return;
-          }
-
-          const chunk = chunksForThisWorker[ci];
-          console.log(
-            `%c[WORKER ${workerIndex}] Processing chunk ${ci} (size=${chunk.length})`,
-            "color:#00aaff",
-          );
-
-          // --- BE --- //
-          currentOpRef.current += 1;
-          setProgress((currentOpRef.current / totalOpsRef.current) * 100);
-          console.log(
-            `%c[PROGRESS] BE → ${(
-              (currentOpRef.current / totalOpsRef.current) *
-              100
-            ).toFixed(2)}%`,
-            "color:#33cc33",
-          );
-
-          const result = await processBatch(chunk, headers, types);
-
-          // --- KI --- //
-          currentOpRef.current += 1;
-          setProgress((currentOpRef.current / totalOpsRef.current) * 100);
-          console.log(
-            `%c[PROGRESS] KI → ${(
-              (currentOpRef.current / totalOpsRef.current) *
-              100
-            ).toFixed(2)}%`,
-            "color:#33cc33",
-          );
-
-          processedRef.current.push(...result);
-
-          console.log(
-            `%c[WORKER ${workerIndex}] Chunk ${ci} DONE`,
-            "color:#00cc88",
-          );
-        }
-
-        console.log(
-          `%c[WORKER ${workerIndex}] ALL CHUNKS DONE`,
-          "color:#00cc88",
-        );
-      }
-
-      const workers = workerChunks.map((c, i) => worker(c, i));
-      console.log(
-        "%c[RUN] Workers started: " + workers.length,
-        "color:#ffaa00",
-      );
-
-      await Promise.all(workers);
 
       if (active && !cancelledRef.current) {
         const end = Date.now();
         setEndTime(end);
         setDone(true);
 
-        console.log(
-          `%c[RUN] COMPLETE. Duration = ${
-            (end - startTimeRef.current!) / 1000
-          }s`,
-          "color:#00cc88",
-        );
-
         onComplete({
           headers,
-          rows: processedRef.current,
+          rows: processed,
           duration: (end - startTimeRef.current!) / 1000,
         });
       }
@@ -202,7 +86,6 @@ export default function ProcessingView({
     run();
 
     return () => {
-      console.log("%c[ProcessingView] CLEANUP", "color:#ffaa00");
       active = false;
       cancelledRef.current = true;
     };
@@ -225,7 +108,6 @@ export default function ProcessingView({
           <Button
             variant="destructive"
             onClick={() => {
-              console.log("%c[RUN] CANCEL REQUESTED", "color:red");
               cancelledRef.current = true;
             }}
           >

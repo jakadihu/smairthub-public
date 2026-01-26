@@ -1,21 +1,65 @@
 {
-  "title": "Excel Optimization",
-  "upload": "Upload File",
-  "drop_here": "Drop file here…",
-  "drag_here": "Drag file here…",
-  "continue": "Continue",
-  "click_to_upload": "Click to upload file",
-  "select_file": "Select file",
-  "uploaded_file": "Uploaded file:",
-  "results": {
-    "title": "Results",
-    "headers": "Header columns",
-    "rows": "Row results",
-    "row": "Row",
-    "valid": "Valid",
-    "invalid": "Invalid",
-    "original": "Original",
-    "normalized": "Normalized",
-    "summary": "Summary"
+  "uploader": {
+    "title": "Excel optimization",
+    "description": "Upload file",
+    "drop_here": "Drop file here…",
+    "drag_here": "Drag file here…",
+    "continue": "Continue",
+    "click_to_upload": "Click to upload file",
+    "select_file": "Select file",
+    "uploaded_file": "Uploaded file:"
+  },
+  "analyze_view": {
+    "analyze_steps": {
+      "load_file": "Loading file…",
+      "select_sheet": "Selecting sheet…",
+      "normalize_data": "Normalizing data…",
+      "detect_headers": "Detecting headers…",
+      "procees_rows": "Processing rows…",
+      "preparation_completed": "Preparation completed…"
+    },
+    "file_info": "File Information",
+    "file_name": "File Name",
+    "file_type": "File Type",
+    "file_sheet": "Sheet",
+    "file_size": "File Size",
+    "rows": "Rows",
+    "column_editor": {
+      "column_manager": "Column Manager",
+      "description": "Here you can modify the column headers and types.",
+      "description_strong": "Make sure the types match the data for correct processing.",
+      "column_placeholder": "Header",
+      "string": "Text",
+      "number": "Number",
+      "date": "Date",
+      "boolean": "Boolean",
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "duplicate_headers_error": {
+      "title": "Duplicate column headers found",
+      "description": "Two or more columns have the same name. Every column name must be unique."
+    },
+    "preview_table": {
+      "preview": "Preview",
+      "preview_description": "Preview of the table's beginning",
+      "cell_content": "Cell content",
+      "types": {
+        "string": "Text",
+        "number": "Number",
+        "date": "Date",
+        "boolean": "Boolean",
+        "email": "Email",
+        "phone": "Phone"
+      }
+    },
+    "back_to_uploader": "Back to file upload",
+    "process_data": "Process data",
+    "sheet_selector": {
+      "title": "Select sheet",
+      "description": "Select the sheet to process from the file.",
+      "select_placeholder": "Select sheet",
+      "cancel": "Cancel"      
+    }
   }
 }

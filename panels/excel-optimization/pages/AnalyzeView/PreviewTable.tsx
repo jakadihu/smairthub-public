@@ -8,15 +8,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@packages/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@packages/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@packages/ui/dialog";
 import { Textarea } from "@packages/ui/textarea";
+import { useI18n } from "../../useI18n";
 
 interface Props {
   headers: string[];
+  types: string[];
   rows: any[];
+  locale: string;
 }
 
-export default function PreviewTable({ headers, rows }: Props) {
+export default function PreviewTable({ headers, types, rows, locale }: Props) {
+  const t = useI18n(locale);
+  
   const [open, setOpen] = useState(false);
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
 
@@ -29,8 +39,8 @@ export default function PreviewTable({ headers, rows }: Props) {
     <div>
       <Card size="sm">
         <CardHeader>
-          <CardTitle>Előnézet</CardTitle>
-          <CardDescription>Az első 10 sor megjelenítése</CardDescription>
+          <CardTitle>{t("analyze_view.preview_table.preview")}</CardTitle>
+          <CardDescription>{t("analyze_view.preview_table.preview_description")}</CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -38,7 +48,7 @@ export default function PreviewTable({ headers, rows }: Props) {
           <div className="border rounded-md overflow-x-auto">
             <table className="w-full border-collapse text-xs table-auto">
               <thead className="bg-muted/40">
-                <tr className="border-b">
+                <tr>
                   {/* Row number column */}
                   <th className="w-10 px-2 py-1 text-center text-muted-foreground">
                     #
@@ -52,6 +62,18 @@ export default function PreviewTable({ headers, rows }: Props) {
                       title={h.length > 20 ? h : undefined}
                     >
                       {h}
+                    </th>
+                  ))}
+                </tr>
+                <tr className="border-b">
+                  <th></th>
+                  {types.map((tp, i) => (
+                    <th
+                      key={i}
+                      className="px-2 py-1 max-w-[200px] truncate whitespace-nowrap overflow-hidden text-ellipsis text-left font-medium text-muted-foreground"
+                      title={tp.length > 20 ? tp : undefined}
+                    >
+                      [{t("analyze_view.preview_table.types." + tp)}]
                     </th>
                   ))}
                 </tr>
@@ -95,7 +117,7 @@ export default function PreviewTable({ headers, rows }: Props) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Cellatartalom</DialogTitle>
+            <DialogTitle>{t("analyze_view.preview_table.cell_content")}</DialogTitle>
           </DialogHeader>
 
           <Textarea

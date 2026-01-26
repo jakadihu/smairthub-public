@@ -14,10 +14,12 @@ import {
   CardTitle,
 } from "@packages/ui/card";
 import { InputGroup, InputGroupInput } from "@packages/ui/input-group";
+import { useI18n } from "../../useI18n";
 
 interface Props {
   headers: string[];
   types: string[];
+  locale: string;
   onHeaderChange: (headers: string[]) => void;
   onTypeChange: (types: string[]) => void;
 }
@@ -25,9 +27,12 @@ interface Props {
 export default function ColumnEditor({
   headers,
   types,
+  locale,
   onHeaderChange,
   onTypeChange,
 }: Props) {
+  const t = useI18n(locale);
+
   function updateHeader(i: number, value: string) {
     const copy = [...headers];
     copy[i] = value;
@@ -44,11 +49,11 @@ export default function ColumnEditor({
     <div>
       <Card size="sm">
         <CardHeader>
-          <CardTitle>Oszlopkezelő</CardTitle>
+          <CardTitle>
+            {t("analyze_view.column_editor.column_manager")}
+          </CardTitle>
           <CardDescription>
-            Itt módosíthatod az oszlopok fejlécét és típusát. Győződj meg róla,
-            hogy a típusok megfelelnek az adatoknak a helyes feldolgozás
-            érdekében.
+            {t("analyze_view.column_editor.description")} <strong>{t("analyze_view.column_editor.description_strong")}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -64,7 +69,7 @@ export default function ColumnEditor({
 
                   <div className="w-px h-5 bg-border mx-1" />
 
-                  <Select                    
+                  <Select
                     value={types[i]}
                     onValueChange={(v) => updateType(i, v)}
                   >
@@ -73,11 +78,24 @@ export default function ColumnEditor({
                     </SelectTrigger>
 
                     <SelectContent>
-                      <SelectItem value="string">Szöveg</SelectItem>
-                      <SelectItem value="number">Szám</SelectItem>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="date">Dátum</SelectItem>
-                      <SelectItem value="boolean">Logikai</SelectItem>
+                      <SelectItem value="string">
+                        {t("analyze_view.column_editor.string")}
+                      </SelectItem>
+                      <SelectItem value="number">
+                        {t("analyze_view.column_editor.number")}
+                      </SelectItem>
+                      <SelectItem value="email">
+                        {t("analyze_view.column_editor.email")}
+                      </SelectItem>
+                      <SelectItem value="date">
+                        {t("analyze_view.column_editor.date")}
+                      </SelectItem>
+                      <SelectItem value="boolean">
+                        {t("analyze_view.column_editor.boolean")}
+                      </SelectItem>
+                      <SelectItem value="phone">
+                        {t("analyze_view.column_editor.phone")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </InputGroup>

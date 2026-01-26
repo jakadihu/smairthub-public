@@ -52,6 +52,16 @@ HEADER LOGIC:
   - (hu) "Oszlop 1", "Oszlop 2"
   - (de) "Spalte 1", "Spalte 2"
 
+UNIQUENESS RULE (STRICT):
+- All header names MUST be globally unique.
+- If two or more headers would end up with the same name after cleaning or generation:
+  → You MUST modify the later ones by appending a localized numeric suffix.
+- Suffix examples:
+  - (en) "Name", "Name 2", "Name 3"
+  - (hu) "Név", "Név 2", "Név 3"
+  - (de) "Name", "Name 2", "Name 3"
+- You MUST NOT leave any duplicate header names under any circumstances.
+
 TYPE INFERENCE:
 Types MUST be inferred ONLY from sample values.
 Allowed types:

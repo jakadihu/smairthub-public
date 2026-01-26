@@ -113,17 +113,17 @@ export default function Uploader({
         />
 
         {isDragActive ? (
-          <p className="font-medium text-accent-foreground">{t("drop_here")}</p>
+          <p className="font-medium text-accent-foreground">{t("uploader.drop_here")}</p>
         ) : (
           <>
-            <p className="font-medium text-foreground">{t("drag_here")}</p>
+            <p className="font-medium text-foreground">{t("uploader.drag_here")}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {t("click_to_upload")}
+              {t("uploader.click_to_upload")}
             </p>
 
             <Button variant="secondary" className="mt-4 pointer-events-none">
               <Upload className="w-4 h-4 mr-2" />
-              {t("select_file")}
+              {t("uploader.select_file")}
             </Button>
           </>
         )}
@@ -132,7 +132,7 @@ export default function Uploader({
       {files.length > 0 && (
         <div className="mt-6 space-y-3">
           <p className="text-sm font-medium text-foreground">
-            {t("uploaded_file")}
+            {t("uploader.uploaded_file")}
           </p>
 
           {files.map((file, i) => (

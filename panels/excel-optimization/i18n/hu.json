@@ -1,21 +1,65 @@
 {
-  "title": "Excel optimalizálás",
-  "upload": "Fájl feltöltése",
-  "drop_here": "Dobd ide a fájlt…",
-  "drag_here": "Húzd ide az Excel/CSV fájlt",
-  "continue": "Folytatás",
-  "click_to_upload": "Kattints a fájl feltöltéséhez",
-  "select_file": "Válassz fájlt",
-  "uploaded_file": "Feltöltött fájl:",
-  "results": {
-    "title": "Eredmények",
-    "headers": "Fejléc oszlopok",
-    "rows": "Sorok eredményei",
-    "row": "Sor",
-    "valid": "Érvényes",
-    "invalid": "Érvénytelen",
-    "original": "Eredeti",
-    "normalized": "Normalizált",
-    "summary": "Összegzés"
+  "uploader": {
+    "title": "Excel optimalizálás",
+    "description": "Fájl feltöltése",
+    "drop_here": "Dobd ide a fájlt…",
+    "drag_here": "Húzd ide az Excel/CSV fájlt",
+    "continue": "Folytatás",
+    "click_to_upload": "Kattints a fájl feltöltéséhez",
+    "select_file": "Válassz fájlt",
+    "uploaded_file": "Feltöltött fájl:"
+  },
+  "analyze_view": {
+    "analyze_steps": {
+      "load_file": "Fájl betöltése…",
+      "select_sheet": "Munkalap kiválasztása…",
+      "normalize_data": "Adatok normalizálása…",
+      "detect_headers": "Fejlécek detektálása…",
+      "procees_rows": "Sorok feldolgozása…",
+      "preparation_completed": "Előkészítés befejezve…"
+    },
+    "file_info": "Fájl információ",
+    "file_name": "Fájlnév",
+    "file_type": "Fájltípus",
+    "file_sheet": "Munkalap",
+    "file_size": "Fájlméret",
+    "rows": "Sorok száma",
+    "column_editor": {
+      "column_manager": "Oszlop kezelő",
+      "description": "Itt módosíthatod az oszlopok fejlécét és típusát.",
+      "description_strong": "Győződj meg róla, hogy a típusok megfelelnek az adatoknak a helyes feldolgozás érdekében.",
+      "column_placeholder": "Fejléc",
+      "string": "Szöveg",
+      "number": "Szám",
+      "date": "Dátum",
+      "boolean": "Logikai",
+      "email": "Email",
+      "phone": "Telefonszám"
+    },
+    "duplicate_headers_error": {
+      "title": "Duplikált oszlopfejlécek találhatók",
+      "description": "Két vagy több oszlop neve megegyezik. Minden oszlopnévnek egyedinek kell lennie."
+    },
+    "preview_table": {
+      "preview": "Előnézet",
+      "preview_description": "A táblázat elejének előnézete",
+      "cell_content": "Cellatartalom",
+      "types": {
+        "string": "Szöveg",
+        "number": "Szám",
+        "date": "Dátum",
+        "boolean": "Logikai",
+        "email": "Email",
+        "phone": "Telefonszám"
+      }
+    },
+    "back_to_uploader": "Vissza a fájl feltöltéséhez",
+    "process_data": "Adatok feldolgozása",
+    "sheet_selector": {
+      "title": "Válassz munkalapot",
+      "description": "Válaszd ki a feldolgozandó munkalapot a fájlból.",
+      "select_placeholder": "Válassz munkalapot",
+      "cancel": "Mégse"      
+    }
   }
 }

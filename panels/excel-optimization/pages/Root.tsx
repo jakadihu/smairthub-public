@@ -37,8 +37,8 @@ export default function ExcelOptimizationRootPage({
       {/* 1) FÁJL FELTÖLTÉS */}
       {step === "upload" && (
         <>
-          <h1>{t("title")}</h1>
-          <p>{t("upload")}</p>
+          <h1>{t("uploader.title")}</h1>
+          <p>{t("uploader.description")}</p>
 
           <Uploader
             locale={locale}
@@ -54,7 +54,7 @@ export default function ExcelOptimizationRootPage({
               disabled={!file || !isValid}
               className="flex items-center gap-2"
             >
-              {t("continue")}
+              {t("uploader.continue")}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
@@ -70,6 +70,11 @@ export default function ExcelOptimizationRootPage({
             setConfig(config);
             setAnalysis(analysis);
             setStep("processing");
+          }}
+          onCancel={() => {
+            setFile(null); // fájl törlése
+            setIsValid(false); // valid flag reset
+            setStep("upload"); // vissza a feltöltéshez
           }}
         />
       )}

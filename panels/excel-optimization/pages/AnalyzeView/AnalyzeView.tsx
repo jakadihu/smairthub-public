@@ -12,12 +12,16 @@ import {
   FileTypeCorner,
   Weight,
   ListCheck,
-  Clock,
+  AlertCircleIcon,
+  Sheet,
 } from "lucide-react";
 import { detectHeader } from "../../logic/detectHeader";
 import ProgressStepper from "./ProgressStepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@packages/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@packages/ui/tooltip";
+import { Alert, AlertDescription, AlertTitle } from "@packages/ui/alert";
+import { toast } from "sonner";
+import { useI18n } from "../../useI18n";
 
 interface AnalyzeViewProps {
   file: File;
@@ -58,11 +62,14 @@ export default function AnalyzeView({
   file,
   locale,
   onConfigured,
+  onCancel,
 }: {
   file: File;
   locale: string;
   onConfigured: (config: any, analysis: any) => void;
+  onCancel: () => void;
 }) {
+  const t = useI18n(locale);
   const API = process.env.NEXT_PUBLIC_API_URL;
 
   const [loading, setLoading] = useState(true);
@@ -81,15 +88,50 @@ export default function AnalyzeView({
   const [pipelineRunning, setPipelineRunning] = useState(true);
 
   const steps = [
-    "Fájl betöltése…",
-    "Sheet kiválasztása…",
-    "Adatok normalizálása…",
-    "Fejlécek detektálása…",
-    "Sorok feldolgozása…",
-    "Előkészítés befejezve…",
+    "analyze_view.analyze_steps.load_file",
+    "analyze_view.analyze_steps.select_sheet",
+    "analyze_view.analyze_steps.normalize_data",
+    "analyze_view.analyze_steps.detect_headers",
+    "analyze_view.analyze_steps.procees_rows",
+    "analyze_view.analyze_steps.preparation_completed",
   ];
 
   const [currentStep, setCurrentStep] = useState(steps[0]);
+
+  const hasDuplicateHeaders = (() => {
+    const seen = new Set<string>();
+    for (const h of headers) {
+      if (seen.has(h)) return true;
+      seen.add(h);
+    }
+    return false;
+  })();
+
+  function handleHeaderChange(newHeaders: string[]) {
+    const oldHeaders = headers;
+
+    // 1) headers frissítése
+    setHeaders(newHeaders);
+
+    // 2) rows kulcsainak átnevezése
+    if (processed?.rows) {
+      const updatedRows = processed.rows.map((row: any) => {
+        const newRow: any = {};
+
+        newHeaders.forEach((newName, i) => {
+          const oldName = oldHeaders[i];
+          newRow[newName] = row[oldName];
+        });
+
+        return newRow;
+      });
+
+      setProcessed({
+        ...processed,
+        rows: updatedRows,
+      });
+    }
+  }
 
   // -------------------------------------------------------
   // 1) INSPECT
@@ -98,7 +140,7 @@ export default function AnalyzeView({
     async function run() {
       setPipelineRunning(true);
       try {
-        setCurrentStep("Fájl betöltése…");
+        setCurrentStep("analyze_view.analyze_steps.load_file");
 
         const form = new FormData();
         form.append("file", file);
@@ -113,7 +155,7 @@ export default function AnalyzeView({
         const meta = await res.json();
         setAnalysis(meta);
 
-        setCurrentStep("Sheet kiválasztása…");
+        setCurrentStep("analyze_view.analyze_steps.select_sheet");
 
         if (meta.type === "xlsx") {
           if (meta.sheets.length === 1) {
@@ -146,7 +188,7 @@ export default function AnalyzeView({
       setProcessing(true);
 
       try {
-        setCurrentStep("Adatok normalizálása…");
+        setCurrentStep("analyze_view.analyze_steps.normalize_data");
 
         const form = new FormData();
         form.append("file", file);
@@ -196,7 +238,7 @@ export default function AnalyzeView({
         const fullNormalized = normalizeColumns(stringMatrix);
 
         // 3) Sample a fejlécdetektáláshoz
-        setCurrentStep("Fejlécek detektálása…");
+        setCurrentStep("analyze_view.analyze_steps.detect_headers");
         const sample = fullNormalized.slice(0, 10);
 
         // 4) Fejléc detektálás
@@ -218,7 +260,7 @@ export default function AnalyzeView({
         setTypes(typeList);
 
         // 5) Sorok objektummá alakítása
-        setCurrentStep("Sorok feldolgozása…");
+        setCurrentStep("analyze_view.analyze_steps.procees_rows");
         const headerLength = headerList.length;
 
         const normalizedRows = dataRows.map((row) => {
@@ -241,7 +283,7 @@ export default function AnalyzeView({
           rows: objectRows,
         });
 
-        setCurrentStep("Előkészítés befejezve…");
+        setCurrentStep("analyze_view.analyze_steps.preparation_completed");
       } catch (e) {
         console.error(e);
         setError("Nem sikerült feldolgozni a fájlt.");
@@ -263,12 +305,15 @@ export default function AnalyzeView({
   const currentIndex = steps.indexOf(currentStep);
 
   const shouldShowStepper = loading || processing || pipelineRunning;
-
+  
   if (shouldShowStepper) {
     return (
       <>
         <div className="flex items-center justify-center h-[60vh]">
-          <ProgressStepper steps={steps} currentIndex={currentIndex} />
+          <ProgressStepper
+            steps={steps.map((key) => ({ key, label: t(key) }))}
+            currentIndex={currentIndex}
+          />
         </div>
 
         {analysis?.type === "xlsx" && Array.isArray(analysis.sheets) && (
@@ -276,8 +321,10 @@ export default function AnalyzeView({
             open={showSheetModal}
             sheets={analysis.sheets}
             selectedSheet={selectedSheet}
+            locale={locale}
             onSelect={setSelectedSheet}
             onClose={() => setShowSheetModal(false)}
+            onCancel={onCancel}
           />
         )}
       </>
@@ -288,6 +335,13 @@ export default function AnalyzeView({
   if (!analysis) return null;
 
   function handleContinue() {
+
+    
+    if(hasDuplicateHeaders) {      
+      toast.error(t("analyze_view.duplicate_headers_error.title"), {description: t("analyze_view.duplicate_headers_error.description"), position: "top-center"});        
+      return;
+    }
+
     const config = {
       headers,
       types,
@@ -295,7 +349,19 @@ export default function AnalyzeView({
       fileInfo: analysis.fileInfo,
     };
 
-    onConfigured(config, processed);
+    // A types tömb → objektummá alakítása
+    const typeMap = Object.fromEntries(
+      config.headers.map((h, i) => [h, config.types[i]]),
+    );
+
+    // Továbbadás már helyes formátumban
+    onConfigured(
+      {
+        ...config,
+        types: typeMap,
+      },
+      processed,
+    );
   }
 
   function formatBytes(bytes: number) {
@@ -306,11 +372,11 @@ export default function AnalyzeView({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
-  return (
+  return (    
     <div className="space-y-6">
       <Card size="sm">
         <CardHeader>
-          <CardTitle>Fájl információk</CardTitle>
+          <CardTitle>{t("analyze_view.file_info")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
@@ -320,7 +386,7 @@ export default function AnalyzeView({
                   <FileSpreadsheet /> {file.name}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Fájlnév</TooltipContent>
+              <TooltipContent>{t("analyze_view.file_name")}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -328,7 +394,15 @@ export default function AnalyzeView({
                   <FileTypeCorner /> {analysis.type.toUpperCase()}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Fájltípus</TooltipContent>
+              <TooltipContent>{t("analyze_view.file_type")}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Sheet /> {selectedSheet || "N/A"}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("analyze_view.file_sheet")}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -336,7 +410,7 @@ export default function AnalyzeView({
                   <Weight /> {formatBytes(file.size)}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Fájlméret</TooltipContent>
+              <TooltipContent>{t("analyze_view.file_size")}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -344,15 +418,7 @@ export default function AnalyzeView({
                   <ListCheck /> {processed?.raw.length}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Sorok száma</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Clock /> ?
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Várható feldolgozási idő</TooltipContent>
+              <TooltipContent>{t("analyze_view.rows")}</TooltipContent>
             </Tooltip>
           </div>
         </CardContent>
@@ -362,23 +428,24 @@ export default function AnalyzeView({
         <ColumnEditor
           headers={headers}
           types={types}
-          onHeaderChange={setHeaders}
+          locale={locale}
+          onHeaderChange={handleHeaderChange}
           onTypeChange={setTypes}
         />
       )}
 
       {Array.isArray(processed?.rows) && (
-        <PreviewTable headers={headers} rows={processed.rows} />
-      )}
+        <PreviewTable headers={headers} types={types} rows={processed.rows} locale={locale} />
+      )}      
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={() => window.location.reload()}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Vissza
+          {t("analyze_view.back_to_uploader")}
         </Button>
 
         <Button onClick={handleContinue}>
-          Fájl feldolgozása
+          {t("analyze_view.process_data")}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>

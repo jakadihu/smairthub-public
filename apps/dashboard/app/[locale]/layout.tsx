@@ -14,6 +14,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { defaultLocale } from "@smairthub/i18n";
+import { Toaster } from "@packages/ui/sonner";
 
 export const metadata = {
   title: "SmairtHub Dashboard",
@@ -51,6 +52,7 @@ export default async function RootLayout({
       </head>
       {/* Light: fehér háttér, Dark: fekete háttér */}
       <body className="min-h-screen bg-white dark:bg-black">
+        <Toaster />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {/* OUTER WRAPPER → mobilon ad oldalsó teret */}
           <div className="px-3">

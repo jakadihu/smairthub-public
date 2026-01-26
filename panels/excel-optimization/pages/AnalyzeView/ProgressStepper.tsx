@@ -8,15 +8,16 @@ import {
 } from "lucide-react";
 
 const icons: Record<string, React.ComponentType<any>> = {
-  "Fájl betöltése…": File,
-  "Sheet kiválasztása…": ListChecks,
-  "Adatok normalizálása…": Settings,
-  "Fejlécek detektálása…": Table,
-  "Sorok feldolgozása…": Settings,
-  "Előkészítés befejezve…": Check,
+  "analyze_view.analyze_steps.load_file": File,
+  "analyze_view.analyze_steps.select_sheet": ListChecks,
+  "analyze_view.analyze_steps.normalize_data": Settings,
+  "analyze_view.analyze_steps.detect_headers": Table,
+  "analyze_view.analyze_steps.procees_rows": Settings,
+  "analyze_view.analyze_steps.preparation_completed": Check,
 };
 
-type ProgressStepperProps = { steps: string[]; currentIndex: number };
+type StepItem = { key: string; label: string };
+type ProgressStepperProps = { steps: StepItem[]; currentIndex: number };
 
 export default function ProgressStepper({
   steps,
@@ -25,12 +26,12 @@ export default function ProgressStepper({
   return (
     <div className="flex flex-col items-center justify-center gap-1 py-10">
       {steps.map((step, i) => {
-        const Icon = icons[step] ?? Loader2;
+        const Icon = icons[step.key] ?? Loader2;
         const isActive = i === currentIndex;
         const isDone = i < currentIndex;
 
         return (
-          <div key={i} className="flex flex-col items-center relative">
+          <div key={step.key} className="flex flex-col items-center relative">
             {/* Ikon */}
             <div className="relative flex items-center justify-center">
               <Icon
@@ -66,7 +67,7 @@ export default function ProgressStepper({
                 }
               `}
             >
-              {step}
+              {step.label}
             </div>
 
             {/* Függőleges vonal */}

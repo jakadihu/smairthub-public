@@ -1,0 +1,1 @@
+pnpm drizzle-kit push --config=./panels/excel-optimization/db/drizzle.config.ts

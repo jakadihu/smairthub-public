@@ -6,8 +6,10 @@ import Uploader from "./Uploader";
 import { Button } from "@packages/ui/button";
 import { ArrowRight } from "lucide-react";
 import AnalyzeView from "./AnalyzeView/AnalyzeView";
-import ProcessingView from "./ProcessingView";
+import ProcessingView from "./ProcessingView/ProcessingView";
 import ResultsView from "./ResultsView";
+import { createSession } from "../services/createSession";
+
 
 export default function ExcelOptimizationRootPage({
   locale,
@@ -26,6 +28,8 @@ export default function ExcelOptimizationRootPage({
   const [analysis, setAnalysis] = useState<any | null>(null);
   const [config, setConfig] = useState<any | null>(null);
   const [result, setResult] = useState<any | null>(null);
+
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   function handleNext() {
     if (!file) return;
@@ -66,9 +70,11 @@ export default function ExcelOptimizationRootPage({
         <AnalyzeView
           file={file}
           locale={locale}
-          onConfigured={(config, analysis) => {
+          onConfigured={async (config, analysis) => {
+            const { sessionId } = await createSession();
+            setSessionId(sessionId);          
             setConfig(config);
-            setAnalysis(analysis);
+            setAnalysis(analysis);            
             setStep("processing");
           }}
           onCancel={() => {
@@ -82,19 +88,19 @@ export default function ExcelOptimizationRootPage({
       {/* 3) FELDOLGOZÁS (SSE, progress, cancel) */}
       {step === "processing" && config && analysis && (
         <ProcessingView
+          sessionId={sessionId!}
           headers={config.headers}
           types={config.types}
           rows={analysis.rows}
           onBack={() => setStep("analyze")}
-          onComplete={(result) => {
-            setResult(result);
+          onComplete={() => {
             setStep("done");
           }}
         />
       )}
 
       {/* 4) EREDMÉNYEK */}
-      {step === "done" && result && <ResultsView result={result} t={t} />}
+      {step === "done" && <ResultsView result={result} t={t} />}
     </div>
   );
 }

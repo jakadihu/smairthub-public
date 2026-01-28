@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@packages/ui/button";
 import { Progress } from "@packages/ui/progress";
 import { ArrowLeft } from "lucide-react";
-import { processRow } from "../logic/processRow";
+import { processRow } from "../../logic/processRow";
+import { processSession } from "../../services/processSession";
 
 interface ProcessedRow {
   index: number;
@@ -17,21 +18,19 @@ interface ProcessedRow {
 }
 
 export default function ProcessingView({
+  sessionId,
   headers,
   types,
   rows,
   onBack,
   onComplete,
 }: {
+  sessionId: string;
   headers: string[];
   types: Record<string, string>;
   rows: any[];
   onBack: () => void;
-  onComplete: (result: {
-    headers: string[];
-    rows: ProcessedRow[];
-    duration: number;
-  }) => void;
+  onComplete: () => void;
 }) {
   const cancelledRef = useRef(false);
   const startTimeRef = useRef<number | null>(null);
@@ -59,7 +58,7 @@ export default function ProcessingView({
         const row = rows[i];
 
         // 🔍 A teljes validáció és normalizálás itt történik
-        const result = processRow(row, headers, types, i);             
+        const result = processRow(row, headers, types, i);
 
         processed.push(result);
 
@@ -75,11 +74,18 @@ export default function ProcessingView({
         setEndTime(end);
         setDone(true);
 
-        onComplete({
+        const duration = (end - startTimeRef.current!) / 1000;
+
+        // 🔵 DB-be írás
+        await processSession({
+          sessionId,
           headers,
           rows: processed,
-          duration: (end - startTimeRef.current!) / 1000,
+          duration,
         });
+
+        // 🔵 Tovább a ResultView-ra
+        onComplete();
       }
     }
 

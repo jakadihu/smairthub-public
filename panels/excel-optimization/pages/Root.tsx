@@ -10,7 +10,6 @@ import ProcessingView from "./ProcessingView/ProcessingView";
 import ResultsView from "./ResultsView";
 import { createSession } from "../services/createSession";
 
-
 export default function ExcelOptimizationRootPage({
   locale,
 }: {
@@ -72,9 +71,9 @@ export default function ExcelOptimizationRootPage({
           locale={locale}
           onConfigured={async (config, analysis) => {
             const { sessionId } = await createSession();
-            setSessionId(sessionId);          
+            setSessionId(sessionId);
             setConfig(config);
-            setAnalysis(analysis);            
+            setAnalysis(analysis);
             setStep("processing");
           }}
           onCancel={() => {
@@ -100,7 +99,9 @@ export default function ExcelOptimizationRootPage({
       )}
 
       {/* 4) EREDMÉNYEK */}
-      {step === "done" && <ResultsView result={result} t={t} />}
+      {step === "done" && sessionId && (
+        <ResultsView sessionId={sessionId} />
+      )}
     </div>
   );
 }

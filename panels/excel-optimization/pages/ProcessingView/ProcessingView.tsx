@@ -83,8 +83,7 @@ export default function ProcessingView({
           rows: processed,
           duration,
         });
-
-        // 🔵 Tovább a ResultView-ra
+        
         onComplete();
       }
     }

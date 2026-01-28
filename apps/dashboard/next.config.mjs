@@ -20,6 +20,7 @@ const nextConfig = {
       },
     ];
   },
+  bodySizeLimit: { bodySizeLimit: "10mb" },
 };
 
 export default withNextIntl({

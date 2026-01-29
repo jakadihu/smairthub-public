@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSession } from "../services/getSession";
-import { ResultsTable } from "./ProcessingView/ResultsTable";
-import { getSessionRowsPaged } from "../services/getSessionRowsPaged";
+import { getSession } from "../../logic/db/getSession";
+import { ResultsTable } from "../ProcessingView/ResultsTable";
+import { getSessionRowsPaged } from "../../logic/ResultsView/db/getSessionRowsPaged";
 
 export default function ResultsView({ sessionId }: { sessionId: string }) {
   const [page, setPage] = useState(1);

@@ -7,7 +7,7 @@ import { Button } from "@packages/ui/button";
 import { ArrowRight } from "lucide-react";
 import AnalyzeView from "./AnalyzeView/AnalyzeView";
 import ProcessingView from "./ProcessingView/ProcessingView";
-import ResultsView from "./ResultsView";
+import ResultsView from "./ResultsView/ResultsView";
 import { createSession } from "../logic/db/createSession";
 
 export default function ExcelOptimizationRootPage({

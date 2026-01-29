@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "../db";
-import { excelSessionRows } from "../db/schema/sessionRow";
+import { db } from "../../../db";
+import { excelSessionRows } from "../../../db/schema/sessionRow";
 import { eq } from "drizzle-orm";
 
 export async function getSessionRows(sessionId: string) {

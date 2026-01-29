@@ -29,6 +29,13 @@
       "when": 1769538779868,
       "tag": "0003_breezy_solo",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769619742270,
+      "tag": "0004_supreme_tyrannus",
+      "breakpoints": true
     }
   ]
 }

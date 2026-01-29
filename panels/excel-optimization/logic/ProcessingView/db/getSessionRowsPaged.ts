@@ -1,8 +1,8 @@
 "use server";
 
-import { db } from "../db";
-import { excelSessionRows } from "../db/schema/sessionRow";
-import { excelSessionIssues } from "../db/schema/sessionIssues";
+import { db } from "../../../db";
+import { excelSessionRows } from "../../../db/schema/sessionRow";
+import { excelSessionIssues } from "../../../db/schema/sessionIssues";
 import { eq, inArray,sql } from "drizzle-orm";
 
 export async function getSessionRowsPaged(

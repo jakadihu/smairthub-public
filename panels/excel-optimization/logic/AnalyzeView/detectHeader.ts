@@ -1,6 +1,6 @@
 // logic/detectHeader.ts
-import { callAI } from "@/panels/excel-optimization/services/ai";
-import { buildHeaderDetectPrompt } from "@/panels/excel-optimization/logic/prompts/headerDetectPrompt";
+import { callAI } from "../../services/ai";
+import { buildHeaderDetectPrompt } from "./prompts/headerDetectPrompt";
 
 export interface HeaderDetectionResult {
   hasHeader: boolean;

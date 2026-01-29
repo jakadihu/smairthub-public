@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@packages/ui/button";
 import { Progress } from "@packages/ui/progress";
 import { ArrowLeft } from "lucide-react";
-import { processRow } from "../../logic/processRow";
-import { processSession } from "../../services/processSession";
+import { processRow } from "../../logic/ProcessingView/processRow";
+import { processSession } from "../../logic/ProcessingView/db/processSession";
 
 interface ProcessedRow {
   index: number;

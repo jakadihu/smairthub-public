@@ -15,7 +15,7 @@ import {
   AlertCircleIcon,
   Sheet,
 } from "lucide-react";
-import { detectHeader } from "../../logic/detectHeader";
+import { detectHeader } from "../../logic/AnalyzeView/detectHeader";
 import ProgressStepper from "./ProgressStepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@packages/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@packages/ui/tooltip";

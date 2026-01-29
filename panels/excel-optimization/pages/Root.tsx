@@ -8,7 +8,7 @@ import { ArrowRight } from "lucide-react";
 import AnalyzeView from "./AnalyzeView/AnalyzeView";
 import ProcessingView from "./ProcessingView/ProcessingView";
 import ResultsView from "./ResultsView";
-import { createSession } from "../services/createSession";
+import { createSession } from "../logic/db/createSession";
 
 export default function ExcelOptimizationRootPage({
   locale,

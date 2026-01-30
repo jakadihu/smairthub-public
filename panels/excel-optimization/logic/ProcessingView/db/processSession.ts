@@ -17,11 +17,14 @@ export async function processSession({
   rows: any[];
   duration: number;
 }) {
+
+  /*
   // 1) Session frissítése
   await db
     .update(excelSessions)
     .set({ duration: String(duration) })
     .where(eq(excelSessions.id, sessionId));
+    */
 
   // 2) Sorok beszúrása
   for (const row of rows) {

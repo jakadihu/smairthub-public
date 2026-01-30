@@ -39,7 +39,18 @@ export default function ProcessingView({
   const [done, setDone] = useState(false);
   const [endTime, setEndTime] = useState<number | null>(null);
 
+  // 🔥 Ez a kulcs: explicit trigger, nem mount
+  const [started, setStarted] = useState(false);
+
+  // 🔥 A mount után egyszer aktiváljuk a feldolgozást
   useEffect(() => {
+    setStarted(true);
+  }, []);
+
+  // 🔥 A feldolgozás csak akkor indul el, ha started = true
+  useEffect(() => {
+    if (!started) return;
+
     let active = true;
     cancelledRef.current = false;
 
@@ -55,17 +66,21 @@ export default function ProcessingView({
       for (let i = 0; i < total; i++) {
         if (!active || cancelledRef.current) break;
 
-        const row = rows[i];
+        const duration = 0;
 
-        // 🔍 A teljes validáció és normalizálás itt történik
+        const row = rows[i];
         const result = processRow(row, headers, types, i);
+        await processSession({
+          sessionId,
+          headers,
+          rows: [result],
+          duration,
+        });
 
         processed.push(result);
 
-        // 🔄 Valós progressz
         setProgress(((i + 1) / total) * 100);
 
-        // Kis pihenő, hogy a UI frissüljön (különben túl gyors)
         await new Promise((r) => setTimeout(r, 0));
       }
 
@@ -76,15 +91,18 @@ export default function ProcessingView({
 
         const duration = (end - startTimeRef.current!) / 1000;
 
-        // 🔵 DB-be írás
-        await processSession({
+        /*
+        await processSessionInChunks({
           sessionId,
           headers,
           rows: processed,
           duration,
         });
-        
-        onComplete();
+        */
+
+        if (false) {
+          onComplete();
+        }
       }
     }
 
@@ -94,7 +112,7 @@ export default function ProcessingView({
       active = false;
       cancelledRef.current = true;
     };
-  }, [rows, headers, types, onComplete]);
+  }, [started]); // 🔥 csak egyszer fut, amikor started true lesz
 
   const duration =
     startTimeRef.current && endTime

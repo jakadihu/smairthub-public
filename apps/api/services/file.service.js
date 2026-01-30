@@ -1,5 +1,7 @@
 // services/file.service.js
 import { inspectFile, processFile } from "../utils/fileHandlerRegistry.js";
+import path from "path";
+import fs from "fs/promises";
 
 function normalizeFileType(file) {
   const mime = file.mimetype;
@@ -59,5 +61,25 @@ export async function handleFileProcess(req, res) {
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: "Process failed" });
+  }
+}
+
+
+
+export async function uploadJsonHandler(req, res) {
+  try {
+    const buffer = req.body; // Buffer lesz, ha a raw middleware működik
+
+    const jsonId = crypto.randomUUID();
+    const uploadDir = "/tmp/json";
+    const filePath = path.join(uploadDir, jsonId + ".json");
+
+    await fs.mkdir(uploadDir, { recursive: true });
+    await fs.writeFile(filePath, buffer);
+
+    res.json({ jsonId });
+  } catch (err) {
+    console.error("JSON upload error:", err);
+    res.status(500).json({ error: "Upload failed" });
   }
 }

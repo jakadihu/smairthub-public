@@ -12,21 +12,14 @@ import {
   FileTypeCorner,
   Weight,
   ListCheck,
-  AlertCircleIcon,
   Sheet,
 } from "lucide-react";
 import { detectHeader } from "../../logic/AnalyzeView/detectHeader";
 import ProgressStepper from "./ProgressStepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@packages/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@packages/ui/tooltip";
-import { Alert, AlertDescription, AlertTitle } from "@packages/ui/alert";
 import { toast } from "sonner";
 import { useI18n } from "../../useI18n";
-
-interface AnalyzeViewProps {
-  file: File;
-  onConfigured: (config: any, analysis: any) => void;
-}
 
 type SheetData = {
   raw: any[][];
@@ -178,7 +171,7 @@ export default function AnalyzeView({
   }, [file, API]);
 
   // -------------------------------------------------------
-  // 2) PROCESS — DEADLOCK-MENTES VERZIÓ
+  // 2) PROCESS
   // -------------------------------------------------------
   useEffect(() => {
     async function processFile() {
@@ -283,7 +276,21 @@ export default function AnalyzeView({
           rows: objectRows,
         });
 
-        setCurrentStep("analyze_view.analyze_steps.preparation_completed");
+        const jsonString = JSON.stringify(objectRows);
+        const resJson = await fetch(`${API}/file/upload-json`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: jsonString,
+        });
+
+        const { jsonId } = await resJson.json();
+
+
+        setCurrentStep("analyze_view.analyze_steps.preparation_completed");        
+
+        
       } catch (e) {
         console.error(e);
         setError("Nem sikerült feldolgozni a fájlt.");
@@ -305,7 +312,7 @@ export default function AnalyzeView({
   const currentIndex = steps.indexOf(currentStep);
 
   const shouldShowStepper = loading || processing || pipelineRunning;
-  
+
   if (shouldShowStepper) {
     return (
       <>
@@ -335,10 +342,11 @@ export default function AnalyzeView({
   if (!analysis) return null;
 
   function handleContinue() {
-
-    
-    if(hasDuplicateHeaders) {      
-      toast.error(t("analyze_view.duplicate_headers_error.title"), {description: t("analyze_view.duplicate_headers_error.description"), position: "top-center"});        
+    if (hasDuplicateHeaders) {
+      toast.error(t("analyze_view.duplicate_headers_error.title"), {
+        description: t("analyze_view.duplicate_headers_error.description"),
+        position: "top-center",
+      });
       return;
     }
 
@@ -372,7 +380,7 @@ export default function AnalyzeView({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
-  return (    
+  return (
     <div className="space-y-6">
       <Card size="sm">
         <CardHeader>
@@ -435,8 +443,13 @@ export default function AnalyzeView({
       )}
 
       {Array.isArray(processed?.rows) && (
-        <PreviewTable headers={headers} types={types} rows={processed.rows} locale={locale} />
-      )}      
+        <PreviewTable
+          headers={headers}
+          types={types}
+          rows={processed.rows}
+          locale={locale}
+        />
+      )}
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={() => window.location.reload()}>

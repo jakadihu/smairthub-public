@@ -59,7 +59,7 @@ export default function AnalyzeView({
 }: {
   file: File;
   locale: string;
-  onConfigured: (config: any, analysis: any) => void;
+  onConfigured: (config: any, analysis: any, jsonId: any) => void;
   onCancel: () => void;
 }) {
   const t = useI18n(locale);
@@ -77,6 +77,7 @@ export default function AnalyzeView({
   const [processed, setProcessed] = useState<any | null>(null);
 
   const [processing, setProcessing] = useState(false);
+  const [jsonId, setJsonId] = useState(false);
 
   const [pipelineRunning, setPipelineRunning] = useState(true);
 
@@ -283,14 +284,10 @@ export default function AnalyzeView({
             "Content-Type": "application/json",
           },
           body: jsonString,
-        });
+        });        
+        setJsonId(await resJson.json());
 
-        const { jsonId } = await resJson.json();
-
-
-        setCurrentStep("analyze_view.analyze_steps.preparation_completed");        
-
-        
+        setCurrentStep("analyze_view.analyze_steps.preparation_completed");
       } catch (e) {
         console.error(e);
         setError("Nem sikerült feldolgozni a fájlt.");
@@ -312,7 +309,7 @@ export default function AnalyzeView({
   const currentIndex = steps.indexOf(currentStep);
 
   const shouldShowStepper = loading || processing || pipelineRunning;
-
+  
   if (shouldShowStepper) {
     return (
       <>
@@ -369,6 +366,7 @@ export default function AnalyzeView({
         types: typeMap,
       },
       processed,
+      jsonId
     );
   }
 

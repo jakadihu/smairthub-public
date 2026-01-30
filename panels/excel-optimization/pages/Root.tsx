@@ -19,8 +19,7 @@ export default function ExcelOptimizationRootPage({ locale }: { locale: string }
   const [isValid, setIsValid] = useState(false);
 
   const [analysis, setAnalysis] = useState<any | null>(null);
-  const [config, setConfig] = useState<any | null>(null);
-  const [result, setResult] = useState<any | null>(null);
+  const [config, setConfig] = useState<any | null>(null);  
 
   const [sessionId, setSessionId] = useState<string | null>(null);
 
@@ -42,6 +41,11 @@ export default function ExcelOptimizationRootPage({ locale }: { locale: string }
   const stableHeaders = useMemo(() => config?.headers ?? [], [config]);
   const stableTypes = useMemo(() => config?.types ?? {}, [config]);
   const stableRows = useMemo(() => analysis?.rows ?? [], [analysis]);
+  const stableJsonId = useMemo(() => analysis?.jsonId ?? [], [analysis]);  
+
+  console.log("analysis json", analysis?.jsonId);
+  console.log("root stabelTypes", stableTypes, step);
+  console.log("root stableJsonid", stableJsonId, step);
 
   return (
     <div className="space-y-6">
@@ -99,6 +103,7 @@ export default function ExcelOptimizationRootPage({ locale }: { locale: string }
           headers={stableHeaders}
           types={stableTypes}
           rows={stableRows}
+          jsonId = {stableJsonId}
           onBack={handleBack}
           onComplete={handleComplete}
         />

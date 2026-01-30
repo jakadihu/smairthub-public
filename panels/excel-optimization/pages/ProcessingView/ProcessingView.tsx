@@ -22,6 +22,7 @@ export default function ProcessingView({
   headers,
   types,
   rows,
+  jsonId,
   onBack,
   onComplete,
 }: {
@@ -29,6 +30,7 @@ export default function ProcessingView({
   headers: string[];
   types: Record<string, string>;
   rows: any[];
+  jsonId: any[];
   onBack: () => void;
   onComplete: () => void;
 }) {
@@ -49,7 +51,7 @@ export default function ProcessingView({
 
   // 🔥 A feldolgozás csak akkor indul el, ha started = true
   useEffect(() => {
-    if (!started) return;
+    if (!started) return;    
 
     let active = true;
     cancelledRef.current = false;

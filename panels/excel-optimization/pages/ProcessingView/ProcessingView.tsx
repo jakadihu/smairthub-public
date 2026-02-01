@@ -4,24 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@packages/ui/button";
 import { Progress } from "@packages/ui/progress";
 import { ArrowLeft } from "lucide-react";
-import { processRow } from "../../logic/ProcessingView/processRow";
-import { processSession } from "../../logic/ProcessingView/db/processSession";
-
-interface ProcessedRow {
-  index: number;
-  success: boolean;
-  errorMessage: string | null;
-  original: any;
-  normalized: Record<string, any> | null;
-  rowScore: number;
-  rowStatus: "ok" | "warning" | "danger";
-}
+import { getProgressAction } from "../../logic/ProcessingView/getProgressAction";
 
 export default function ProcessingView({
   sessionId,
   headers,
   types,
-  rows,
   jsonId,
   onBack,
   onComplete,
@@ -29,97 +17,43 @@ export default function ProcessingView({
   sessionId: string;
   headers: string[];
   types: Record<string, string>;
-  rows: any[];
-  jsonId: any[];
+  jsonId: string;
   onBack: () => void;
   onComplete: () => void;
 }) {
   const cancelledRef = useRef(false);
-  const startTimeRef = useRef<number | null>(null);
 
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
-  const [endTime, setEndTime] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null); 
 
-  // 🔥 Ez a kulcs: explicit trigger, nem mount
-  const [started, setStarted] = useState(false);
-
-  // 🔥 A mount után egyszer aktiváljuk a feldolgozást
+  // 2) polloljuk a progresset
   useEffect(() => {
-    setStarted(true);
-  }, []);
+    if (error) return;
 
-  // 🔥 A feldolgozás csak akkor indul el, ha started = true
-  useEffect(() => {
-    if (!started) return;    
+    const interval = setInterval(async () => {
+      if (cancelledRef.current) {
+        clearInterval(interval);
+        return;
+      }
+      const state = await getProgressAction(sessionId);
 
-    let active = true;
-    cancelledRef.current = false;
+      setProgress(state.progress);
 
-    async function run() {
-      const total = rows.length;
-      const processed: ProcessedRow[] = [];
-
-      startTimeRef.current = Date.now();
-      setProgress(0);
-      setDone(false);
-      setEndTime(null);
-
-      for (let i = 0; i < total; i++) {
-        if (!active || cancelledRef.current) break;
-
-        const duration = 0;
-
-        const row = rows[i];
-        const result = processRow(row, headers, types, i);
-        await processSession({
-          sessionId,
-          headers,
-          rows: [result],
-          duration,
-        });
-
-        processed.push(result);
-
-        setProgress(((i + 1) / total) * 100);
-
-        await new Promise((r) => setTimeout(r, 0));
+      if (state.status === "error") {
+        setError(state.error ?? "Ismeretlen hiba történt.");
+        clearInterval(interval);
       }
 
-      if (active && !cancelledRef.current) {
-        const end = Date.now();
-        setEndTime(end);
+      if (state.status === "done") {
         setDone(true);
-
-        const duration = (end - startTimeRef.current!) / 1000;
-
-        /*
-        await processSessionInChunks({
-          sessionId,
-          headers,
-          rows: processed,
-          duration,
-        });
-        */
-
-        if (false) {
-          onComplete();
-        }
+        clearInterval(interval);
+        onComplete();
       }
-    }
+    }, 100);
 
-    run();
-
-    return () => {
-      active = false;
-      cancelledRef.current = true;
-    };
-  }, [started]); // 🔥 csak egyszer fut, amikor started true lesz
-
-  const duration =
-    startTimeRef.current && endTime
-      ? ((endTime - startTimeRef.current) / 1000).toFixed(2)
-      : null;
+    return () => clearInterval(interval);
+  }, [sessionId, error]);
 
   return (
     <div className="p-6 space-y-6">
@@ -129,7 +63,7 @@ export default function ProcessingView({
           Vissza
         </Button>
 
-        {!done && (
+        {!done && !error && (
           <Button
             variant="destructive"
             onClick={() => {
@@ -144,25 +78,16 @@ export default function ProcessingView({
       <div className="flex flex-col items-center gap-4 mt-6">
         <Progress value={progress} className="w-full" />
 
-        {!done && !cancelledRef.current && (
+        {!done && !error && (
           <p className="text-sm text-muted-foreground">
             {Math.round(progress)}% kész
           </p>
         )}
 
-        {cancelledRef.current && (
-          <p className="text-red-600 font-medium">Feldolgozás megszakítva.</p>
-        )}
+        {error && <p className="text-red-600 font-medium">{error}</p>}
 
         {done && (
-          <>
-            <p className="text-green-600 font-medium">Feldolgozás kész!</p>
-            {duration && (
-              <p className="text-sm text-muted-foreground">
-                Feldolgozási idő: {duration} másodperc
-              </p>
-            )}
-          </>
+          <p className="text-green-600 font-medium">Feldolgozás kész!</p>
         )}
       </div>
     </div>

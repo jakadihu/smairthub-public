@@ -3,11 +3,10 @@ import { pgTable, uuid, timestamp, text, doublePrecision } from "drizzle-orm/pg-
 
 export const excelSessions = pgTable("excel_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
-  createdAt: timestamp("created_at").defaultNow(),
-  // feldolgozás állapota 
-  status: text("status").notNull().default("pending"), 
-  //progress 0–1 között 
-  progress: doublePrecision("progress").notNull().default(0),
-  //futási idő
+  createdAt: timestamp("created_at").defaultNow(),  
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+  status: text("status").notNull().default("pending"),   
+  progress: doublePrecision("progress").notNull().default(0),  
   duration: text("duration").notNull().default(""),
+  error: text("error"),
 });

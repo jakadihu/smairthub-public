@@ -15,5 +15,5 @@ export const db = drizzle(pool, {
     excelSessionRows,
     excelSessionIssues,
   },
-  logger: true,
+  logger: false,
 });

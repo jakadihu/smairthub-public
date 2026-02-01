@@ -8,18 +8,24 @@ import { ArrowRight } from "lucide-react";
 import AnalyzeView from "./AnalyzeView/AnalyzeView";
 import ProcessingView from "./ProcessingView/ProcessingView";
 import ResultsView from "./ResultsView/ResultsView";
-import { createSession } from "../logic/db/createSession";
+import { createSessionAndStart } from "../logic/createSessionAndStart";
 
-export default function ExcelOptimizationRootPage({ locale }: { locale: string }) {
+export default function ExcelOptimizationRootPage({
+  locale,
+}: {
+  locale: string;
+}) {
   const t = useI18n(locale);
 
-  const [step, setStep] = useState<"upload" | "analyze" | "processing" | "done">("upload");
+  const [step, setStep] = useState<
+    "upload" | "analyze" | "processing" | "done"
+  >("upload");
 
   const [file, setFile] = useState<File | null>(null);
   const [isValid, setIsValid] = useState(false);
 
   const [analysis, setAnalysis] = useState<any | null>(null);
-  const [config, setConfig] = useState<any | null>(null);  
+  const [config, setConfig] = useState<any | null>(null);
 
   const [sessionId, setSessionId] = useState<string | null>(null);
 
@@ -41,11 +47,7 @@ export default function ExcelOptimizationRootPage({ locale }: { locale: string }
   const stableHeaders = useMemo(() => config?.headers ?? [], [config]);
   const stableTypes = useMemo(() => config?.types ?? {}, [config]);
   const stableRows = useMemo(() => analysis?.rows ?? [], [analysis]);
-  const stableJsonId = useMemo(() => analysis?.jsonId ?? [], [analysis]);  
-
-  console.log("analysis json", analysis?.jsonId);
-  console.log("root stabelTypes", stableTypes, step);
-  console.log("root stableJsonid", stableJsonId, step);
+  const stableJsonId = useMemo(() => analysis?.jsonId ?? [], [analysis]);
 
   return (
     <div className="space-y-6">
@@ -82,7 +84,11 @@ export default function ExcelOptimizationRootPage({ locale }: { locale: string }
           file={file}
           locale={locale}
           onConfigured={async (config, analysis) => {
-            const { sessionId } = await createSession();
+            const { sessionId } = await createSessionAndStart({
+              jsonId: analysis.jsonId.jsonId,
+              headers: config.headers,
+              types: config.types,
+            });
             setSessionId(sessionId);
             setConfig(config);
             setAnalysis(analysis);
@@ -102,8 +108,7 @@ export default function ExcelOptimizationRootPage({ locale }: { locale: string }
           sessionId={sessionId!}
           headers={stableHeaders}
           types={stableTypes}
-          rows={stableRows}
-          jsonId = {stableJsonId}
+          jsonId={stableJsonId.jsonId}
           onBack={handleBack}
           onComplete={handleComplete}
         />

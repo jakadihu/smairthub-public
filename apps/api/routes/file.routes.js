@@ -27,7 +27,7 @@ router.post("/process", upload.single("file"), handleFileProcess);
 router.get("/json/:id", async (req, res) => {
   try {
     const jsonId = req.params.id;
-    const filePath = path.join("/tmp/json", jsonId + ".json");
+    const filePath = path.join("/tmp/json", jsonId + ".1json");
 
     const data = await fs.readFile(filePath, "utf8");
 
@@ -38,5 +38,23 @@ router.get("/json/:id", async (req, res) => {
     res.status(404).json({ error: "JSON not found" });
   }
 });
+
+
+
+router.delete("/json/:id", async (req, res) => {
+  try {
+    const jsonId = req.params.id;
+    const filePath = path.join("/tmp/json", jsonId + ".json");
+
+    await fs.unlink(filePath);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("JSON delete error:", err);
+    res.status(404).json({ error: "JSON not found or cannot delete" });
+  }
+});
+
+
 
 export default router;

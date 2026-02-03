@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { getSession } from "../../logic/db/getSession";
-import { ResultsTable } from "../ProcessingView/ResultsTable";
+import { ResultsTable } from "./ResultsTable";
 import { getSessionRowsPaged } from "../../logic/ResultsView/db/getSessionRowsPaged";
 
 export default function ResultsView({ sessionId }: { sessionId: string }) {
   const [page, setPage] = useState(1);
-  const pageSize = 30;
+  const pageSize = 250;
 
   const [rows, setRows] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
@@ -23,7 +23,7 @@ export default function ResultsView({ sessionId }: { sessionId: string }) {
         sessionId,
         page,
         pageSize,
-      );
+      );            
 
       // header kinyerés
       const headerSet = new Set<string>();

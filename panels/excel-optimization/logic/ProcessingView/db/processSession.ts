@@ -5,6 +5,7 @@ import { excelSessions } from "../../../db/schema/session";
 import { excelSessionRows } from "../../../db/schema/sessionRow";
 import { excelSessionIssues } from "../../../db/schema/sessionIssues";
 import { eq } from "drizzle-orm";
+import { CellResult } from "../processRow";
 
 export async function processSession({
   sessionId,
@@ -21,7 +22,7 @@ export async function processSession({
   await db
     .update(excelSessions)
     .set({ duration: String(duration) })
-    .where(eq(excelSessions.id, sessionId));  
+    .where(eq(excelSessions.id, sessionId));
 
   // 2) Sorok beszúrása
   for (const row of rows) {
@@ -31,35 +32,30 @@ export async function processSession({
       id: rowId,
       sessionId,
       rowIndex: row.index,
-      rowScore: row.rowScore,
-      rowStatus: row.rowStatus,
       original: row.original,
-      normalized: row.normalized,
+      normalized: row.cells,
+      hasError: row.hasError ? 1 : 0,
+      hasWarning: row.hasWarning ? 1 : 0,
+      hasInfo: row.hasInfo ? 1 : 0,
+      hasDuplicate: row.hasDuplicate? 1 : 0,
+      normalizedKey: row.normalizedKey,
     });
 
-    type NormalizedIssue = { type: string; severity: string; message: string };
-    type NormalizedCell = {
-      value: string | number | null;
-      issues: NormalizedIssue[];
-    };
-
     // 3) Hibák beszúrása
-    if (row.normalized) {
-      for (const [header, cell] of Object.entries(row.normalized) as [
-        string,
-        NormalizedCell,
-      ][]) {
-        for (const issue of cell.issues) {
-          await db.insert(excelSessionIssues).values({
-            id: crypto.randomUUID(),
-            sessionId,
-            rowId,
-            header,
-            issueType: issue.type,
-            severity: issue.severity,
-            message: issue.message,
-          });
-        }
+    for (const [header, cell] of Object.entries(row.cells) as [
+      string,
+      CellResult,
+    ][]) {
+      for (const issue of cell.issues) {
+        await db.insert(excelSessionIssues).values({
+          id: crypto.randomUUID(),
+          sessionId,
+          rowId,
+          header,
+          issueType: issue.type,
+          severity: issue.severity,
+          message: issue.message,
+        });
       }
     }
   }

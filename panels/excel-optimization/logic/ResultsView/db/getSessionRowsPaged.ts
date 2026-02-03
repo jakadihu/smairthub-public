@@ -3,12 +3,12 @@
 import { db } from "../../../db";
 import { excelSessionRows } from "../../../db/schema/sessionRow";
 import { excelSessionIssues } from "../../../db/schema/sessionIssues";
-import { eq, inArray,sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 export async function getSessionRowsPaged(
   sessionId: string,
   page: number,
-  pageSize: number
+  pageSize: number,
 ) {
   const offset = (page - 1) * pageSize;
 
@@ -37,19 +37,21 @@ export async function getSessionRowsPaged(
     .select()
     .from(excelSessionIssues)
     .where(inArray(excelSessionIssues.rowId, rowIds));
-
+  
   // 3) issue‑k sorokhoz rendezése
   const issuesByRow: Record<string, any[]> = {};
   for (const issue of issues) {
     if (!issuesByRow[issue.rowId]) issuesByRow[issue.rowId] = [];
     issuesByRow[issue.rowId].push(issue);
   }
+  
 
   // 4) sorok összeállítása
   const merged = rows.map((r) => ({
     ...r,
     issues: issuesByRow[r.id] ?? [],
   }));
+  
 
   // 5) total count
   const [{ count }] = await db

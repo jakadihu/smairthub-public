@@ -27,7 +27,7 @@ router.post("/process", upload.single("file"), handleFileProcess);
 router.get("/json/:id", async (req, res) => {
   try {
     const jsonId = req.params.id;
-    const filePath = path.join("/tmp/json", jsonId + ".1json");
+    const filePath = path.join("/tmp/json", jsonId + ".json");
 
     const data = await fs.readFile(filePath, "utf8");
 

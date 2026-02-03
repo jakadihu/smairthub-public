@@ -8,7 +8,7 @@ export async function updateProgress(
   sessionId: string,
   state: {
     progress: number;
-    done: boolean;
+    status: string;
     error: string | null;
   },
 ) {
@@ -16,7 +16,7 @@ export async function updateProgress(
     .update(excelSessions)
     .set({
       progress: state.progress,
-      status: state.done ? "done" : "running",
+      status: state.status,
       error: state.error,
       updatedAt: new Date(),
     })

@@ -1,0 +1,1 @@
+ALTER TABLE "excel_session_rows" ADD COLUMN "has_info" integer DEFAULT 0 NOT NULL;

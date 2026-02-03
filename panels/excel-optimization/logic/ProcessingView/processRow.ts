@@ -1,26 +1,26 @@
 // processRow.ts
-// A teljes sor-validáció és normalizálás itt történik.
 
 export interface CellIssue {
-  type: string;
-  severity: "warning" | "danger";
+  type: "missing" | "invalid_type" | "format_error";
+  severity: "info" | "warning" | "error";
   message: string;
 }
 
 export interface CellResult {
+  original: string | number | boolean | null;
   normalized: string | number | boolean | null;
   issues: CellIssue[];
-  score: number; // 0–100
 }
 
 export interface ProcessedRow {
   index: number;
-  success: boolean;
-  errorMessage: string | null;
   original: any;
-  normalized: Record<string, CellResult> | null;
-  rowScore: number; // 0–100
-  rowStatus: "ok" | "warning" | "danger";
+  cells: Record<string, CellResult>;
+  hasError: boolean;
+  hasWarning: boolean;
+  hasInfo: boolean;
+  hasDuplicate: boolean;
+  normalizedKey: string;
 }
 
 export function processRow(
@@ -28,49 +28,56 @@ export function processRow(
   headers: string[],
   types: Record<string, string>,
   index: number,
+  contentColumns: string[],
 ): ProcessedRow {
-  try {
-    const normalizedRow: Record<string, CellResult> = {};
-    let totalScore = 0;
-    let totalCells = 0;    
+  const cells: Record<string, CellResult> = {};
+  let hasError = false;
+  let hasWarning = false;
+  let hasInfo = false;
 
-    for (const header of headers) {
-      const expectedType = types[header];
-      const rawValue = row[header];      
+  for (const header of headers) {
+    const expectedType = types[header];
+    const rawValue = row[header];
 
-      const cell = validateAndNormalizeCell(rawValue, expectedType);      
-      normalizedRow[header] = cell;
+    const cell = validateAndNormalizeCell(rawValue, expectedType);
 
-      totalScore += cell.score;
-      totalCells += 1;
+    // Sor szintű állapot meghatározása
+    if (cell.issues.some((i) => i.severity === "error")) {
+      hasError = true;
+    }
+    if (cell.issues.some((i) => i.severity === "warning")) {
+      hasWarning = true;
+    }
+    if (cell.issues.some((i) => i.severity === "info")) {
+      hasInfo = true;
     }
 
-    const rowScore = totalCells > 0 ? Math.round(totalScore / totalCells) : 100;
-
-    const rowStatus =
-      rowScore >= 90 ? "ok" : rowScore >= 60 ? "warning" : "danger";
-
-    return {
-      index,
-      success: true,
-      errorMessage: null,
-      original: row,
-      normalized: normalizedRow,
-      rowScore,
-      rowStatus,
-    };
-  } catch (err: any) {
-    return {
-      index,
-      success: false,
-      errorMessage: err?.message || "Unknown error",
-      original: row,
-      normalized: null,
-      rowScore: 0,
-      rowStatus: "danger",
-    };
+    cells[header] = cell;
   }
+
+  const normalizedKey = JSON.stringify(
+    Object.fromEntries(
+      Object.entries(cells)
+        .filter(([h]) => contentColumns.includes(h))
+        .map(([h, c]) => [h, c.normalized]),
+    ),
+  );
+
+  return {
+    index,
+    original: row,
+    cells,
+    hasError,
+    hasWarning,
+    hasInfo,
+    hasDuplicate: false,
+    normalizedKey,
+  };
 }
+
+// ------------------------------------------------------------
+// Cell-validáció és normalizálás
+// ------------------------------------------------------------
 
 function validateAndNormalizeCell(
   rawValue: any,
@@ -78,198 +85,278 @@ function validateAndNormalizeCell(
 ): CellResult {
   const issues: CellIssue[] = [];
 
-  // 1) Presence check
+  // 1) Üres cella → warning
   if (rawValue === null || rawValue === undefined || rawValue === "") {
     issues.push({
-      type: "missing_value",
+      type: "missing",
       severity: "warning",
       message: "A cella üres.",
     });
 
     return {
+      original: rawValue,
       normalized: null,
       issues,
-      score: 60,
     };
   }
 
-  // Convert to string for processing
+  // 2) Trim
   let value = String(rawValue).trim();
+
+  if (String(rawValue) !== value) {
+    issues.push({
+      type: "format_error",
+      severity: "info",
+      message: "A cella elején vagy végén whitespace volt, eltávolítva.",
+    });
+  }
 
   if (value === "") {
     issues.push({
-      type: "empty_after_trim",
+      type: "missing",
       severity: "warning",
       message: "A cella csak whitespace karaktereket tartalmazott.",
     });
 
     return {
+      original: rawValue,
       normalized: null,
       issues,
-      score: 60,
     };
   }
 
-  // 2) Type-specific validation
+  // 3) Típus-specifikus validáció
   switch (expectedType) {
     case "string":
-      return validateString(value, issues);
+      return validateString(value, rawValue, issues);
 
     case "number":
-      return validateNumber(value, issues);
+      return validateNumber(value, rawValue, issues);
 
     case "boolean":
-      return validateBoolean(value, issues);
+      return validateBoolean(value, rawValue, issues);
 
     case "date":
-      return validateDate(value, issues);
+      return validateDate(value, rawValue, issues);
 
     case "email":
-      return validateEmail(value, issues);
+      return validateEmail(value, rawValue, issues);
 
     case "phone":
-      return validatePhone(value, issues);
+      return validatePhone(value, rawValue, issues);
 
     default:
       issues.push({
-        type: "unknown_type",
-        severity: "danger",
+        type: "invalid_type",
+        severity: "error",
         message: `Ismeretlen típus: ${expectedType}`,
       });
+
       return {
-        normalized: value,
+        original: rawValue,
+        normalized: null,
         issues,
-        score: 0,
       };
   }
 }
 
-function validateString(value: string, issues: CellIssue[]): CellResult {
+// ------------------------------------------------------------
+// Validátorok
+// ------------------------------------------------------------
+
+function validateString(
+  value: string,
+  original: any,
+  issues: CellIssue[],
+): CellResult {
   return {
+    original,
     normalized: value,
     issues,
-    score: 100,
   };
 }
 
-function validateNumber(value: string, issues: CellIssue[]): CellResult {
+function validateNumber(
+  value: string,
+  original: any,
+  issues: CellIssue[],
+): CellResult {
   const normalized = value.replace(/\s/g, "").replace(",", ".");
-
   const num = Number(normalized);
+
+  if (normalized !== value) {
+    issues.push({
+      type: "format_error",
+      severity: "info",
+      message: "A szám formátuma normalizálva lett.",
+    });
+  }
 
   if (isNaN(num)) {
     issues.push({
-      type: "invalid_number",
-      severity: "danger",
+      type: "format_error",
+      severity: "error",
       message: "A szám formátuma érvénytelen.",
     });
 
     return {
+      original,
       normalized: null,
       issues,
-      score: 20,
     };
   }
 
   return {
+    original,
     normalized: num,
     issues,
-    score: 100,
   };
 }
 
-function validateBoolean(value: string, issues: CellIssue[]): CellResult {
+function validateBoolean(
+  value: string,
+  original: any,
+  issues: CellIssue[],
+): CellResult {
   const v = value.toLowerCase();
 
   if (["true", "yes", "y", "1", "igen"].includes(v)) {
-    return { normalized: true, issues, score: 100 };
+    return { original, normalized: true, issues };
   }
 
   if (["false", "no", "n", "0", "nem"].includes(v)) {
-    return { normalized: false, issues, score: 100 };
+    return { original, normalized: false, issues };
   }
 
   issues.push({
-    type: "invalid_boolean",
-    severity: "danger",
+    type: "format_error",
+    severity: "error",
     message: "A logikai érték nem felismerhető.",
   });
 
   return {
+    original,
     normalized: null,
     issues,
-    score: 20,
   };
 }
 
-function validateDate(value: string, issues: CellIssue[]): CellResult {
+function validateDate(
+  value: string,
+  original: any,
+  issues: CellIssue[],
+): CellResult {
   const iso = new Date(value);
 
   if (isNaN(iso.getTime())) {
     issues.push({
-      type: "invalid_date",
-      severity: "danger",
+      type: "format_error",
+      severity: "error",
       message: "A dátum formátuma érvénytelen.",
     });
 
     return {
+      original,
       normalized: null,
       issues,
-      score: 20,
     };
   }
 
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    issues.push({
+      type: "format_error",
+      severity: "info",
+      message: "A dátum formátuma felismerhető, de nem ISO.",
+    });
+  }
+
+  // FONTOS: nem normalizálunk ISO-ra automatikusan
   return {
-    normalized: iso.toISOString(),
+    original,
+    normalized: value,
     issues,
-    score: 100,
   };
 }
 
-function validateEmail(value: string, issues: CellIssue[]): CellResult {
+function validateEmail(
+  value: string,
+  original: any,
+  issues: CellIssue[],
+): CellResult {
+  const trimmed = value.trim();
+  // Whitespace → INFO
+  if (trimmed !== value) {
+    issues.push({
+      type: "format_error",
+      severity: "info",
+      message: "A felesleges whitespace eltávolításra került.",
+    });
+  }
+
+  // Lowercase normalizálás → INFO
+  if (trimmed.toLowerCase() !== trimmed) {
+    issues.push({
+      type: "format_error",
+      severity: "info",
+      message: "Az e-mail cím kisbetűsre normalizálva.",
+    });
+  }
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   if (!emailRegex.test(value)) {
     issues.push({
-      type: "invalid_email",
-      severity: "danger",
+      type: "format_error",
+      severity: "error",
       message: "Az e-mail cím formátuma érvénytelen.",
     });
 
     return {
+      original,
       normalized: null,
       issues,
-      score: 20,
     };
   }
 
   return {
+    original,
     normalized: value.toLowerCase(),
     issues,
-    score: 100,
   };
 }
 
-function validatePhone(value: string, issues: CellIssue[]): CellResult {
+function validatePhone(
+  value: string,
+  original: any,
+  issues: CellIssue[],
+): CellResult {
   const digits = value.replace(/\D/g, "");
+
+  if (digits !== value) {
+    issues.push({
+      type: "format_error",
+      severity: "info",
+      message: "A telefonszám normalizálható.",
+    });
+  }
 
   if (digits.length < 7) {
     issues.push({
-      type: "invalid_phone",
-      severity: "danger",
+      type: "format_error",
+      severity: "error",
       message: "A telefonszám túl rövid.",
     });
 
     return {
+      original,
       normalized: null,
       issues,
-      score: 20,
     };
   }
 
   return {
-    normalized: "+" + digits,
+    original,
+    normalized: value,
     issues,
-    score: 100,
   };
 }

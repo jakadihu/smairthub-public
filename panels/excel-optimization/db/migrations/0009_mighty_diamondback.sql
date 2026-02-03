@@ -1,0 +1,1 @@
+ALTER TABLE "excel_session_rows" ADD COLUMN "normalized_key" text DEFAULT '' NOT NULL;
